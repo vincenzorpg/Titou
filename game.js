@@ -163,7 +163,7 @@
     store.profiles[id] = p;
     store.activeId = id;
     profile = p;
-    persistSave(false);
+    persistSave(true);
     renderHUD();
     return p;
   }
@@ -172,6 +172,7 @@
     const keys = Object.keys(store.profiles);
     if (keys.length <= 1 || !store.profiles[id]) return false;
     delete store.profiles[id];
+    deleteProfileFromCloud(id);
     if (store.activeId === id) {
       store.activeId = Object.keys(store.profiles)[0];
       profile = store.profiles[store.activeId];
@@ -259,56 +260,134 @@
     return url.toString();
   }
 
-  // ==================== SYNC CLOUD OPTIONNELLE (FIREBASE RTDB) ====================
+  // ==================== SYNC CLOUD AUTOMATIQUE (FIREBASE RTDB) ====================
+  const DEFAULT_CLOUD_URL = 'https://math-quest-titou-default-rtdb.europe-west1.firebasedatabase.app';
+  const DEFAULT_FAMILY_KEY = 'famille-titou-4e';
   const CLOUD_CFG_KEY = 'mathquest_titou_cloud_v1';
+
   function getCloudConfig() {
     try {
-      return JSON.parse(localStorage.getItem(CLOUD_CFG_KEY) || 'null');
-    } catch {
-      return null;
-    }
+      const saved = JSON.parse(localStorage.getItem(CLOUD_CFG_KEY) || 'null');
+      if (saved && saved.url) return saved;
+    } catch {}
+    return { url: DEFAULT_CLOUD_URL, key: DEFAULT_FAMILY_KEY };
   }
 
   function saveCloudConfig(url, key) {
     const cleanUrl = url.trim().replace(/\/+$/, '');
-    const cleanKey = key.trim().replace(/[^a-zA-Z0-9_-]/g, '') || 'titou-4e';
+    const cleanKey = key.trim().replace(/[^a-zA-Z0-9_-]/g, '') || DEFAULT_FAMILY_KEY;
     if (!cleanUrl) {
       localStorage.removeItem(CLOUD_CFG_KEY);
-      return null;
+      return getCloudConfig();
     }
     const cfg = { url: cleanUrl, key: cleanKey };
     localStorage.setItem(CLOUD_CFG_KEY, JSON.stringify(cfg));
     return cfg;
   }
 
-  async function pushCloudSave() {
+  function setSyncIndicator(state) {
+    const btn = $('btn-sync');
+    if (!btn) return;
+    if (state === 'ok') {
+      btn.innerHTML = '☁️ <span>Sync ✓</span>';
+      btn.title = 'Connecté au Cloud Firebase (PC ↔ Mobile automatique)';
+    } else if (state === 'syncing') {
+      btn.innerHTML = '🔄 <span>Sync...</span>';
+    } else {
+      btn.innerHTML = '☁️ <span>Hors-ligne</span>';
+      btn.title = 'Sauvegardé localement — synchronisera au retour du réseau';
+    }
+  }
+
+  async function pushProfileToCloud(p = profile) {
     const cfg = getCloudConfig();
-    if (!cfg || !cfg.url) return;
+    if (!cfg || !cfg.url || !p || !p.id) return false;
     try {
-      await fetch(`${cfg.url}/saves/${cfg.key}.json`, {
+      const res = await fetch(`${cfg.url}/families/${cfg.key}/profiles/${encodeURIComponent(p.id)}.json`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...profile, updatedAt: Date.now() })
+        body: JSON.stringify({ ...p, updatedAt: Date.now() })
+      });
+      if (res.ok) {
+        setSyncIndicator('ok');
+        return true;
+      }
+      setSyncIndicator('offline');
+      return false;
+    } catch {
+      setSyncIndicator('offline');
+      return false;
+    }
+  }
+
+  async function deleteProfileFromCloud(id) {
+    const cfg = getCloudConfig();
+    if (!cfg || !cfg.url || !id) return;
+    try {
+      await fetch(`${cfg.url}/families/${cfg.key}/profiles/${encodeURIComponent(id)}.json`, {
+        method: 'DELETE'
       });
     } catch {}
+  }
+
+  async function pushCloudSave() {
+    return pushProfileToCloud(profile);
   }
 
   async function pullAndMergeCloud(silent = true) {
     const cfg = getCloudConfig();
     if (!cfg || !cfg.url) return false;
+    setSyncIndicator('syncing');
     try {
-      const res = await fetch(`${cfg.url}/saves/${cfg.key}.json`);
-      if (!res.ok) return false;
-      const remote = await res.json();
-      if (remote && typeof remote === 'object') {
-        profile = mergeProfiles(profile, remote);
-        persistSave(false);
-        renderHUD();
+      const res = await fetch(`${cfg.url}/families/${cfg.key}/profiles.json`);
+      if (!res.ok) {
+        setSyncIndicator('offline');
+        return false;
       }
-      await pushCloudSave();
+      const remoteAll = await res.json();
+      const remoteMap = remoteAll && typeof remoteAll === 'object' ? remoteAll : {};
+
+      // 1) Fusionner tous les profils distants dans le store local
+      for (const [id, rProf] of Object.entries(remoteMap)) {
+        if (!rProf || typeof rProf !== 'object') continue;
+        const cleanRemote = normalizeProfile({ ...rProf, id }, rProf.name || id);
+        if (store.profiles[id]) {
+          store.profiles[id] = mergeProfiles(store.profiles[id], cleanRemote);
+        } else {
+          store.profiles[id] = cleanRemote;
+        }
+      }
+
+      // Mettre à jour le profil actif après fusion
+      if (!store.profiles[store.activeId]) {
+        store.activeId = Object.keys(store.profiles)[0];
+      }
+      profile = store.profiles[store.activeId];
+      persistSave(false);
+      renderHUD();
+
+      // 2) Pousser les profils locaux nouveaux ou plus avancés vers le Cloud
+      const pushTasks = [];
+      for (const [id, lProf] of Object.entries(store.profiles)) {
+        const rProf = remoteMap[id];
+        const needsPush =
+          !rProf ||
+          (lProf.xp || 0) > (rProf.xp || 0) ||
+          (lProf.gems || 0) > (rProf.gems || 0) ||
+          (lProf.badges || []).length > (rProf.badges || []).length;
+        if (needsPush) {
+          pushTasks.push(pushProfileToCloud(lProf));
+        }
+      }
+      if (pushTasks.length > 0) {
+        await Promise.all(pushTasks);
+      }
+
+      setSyncIndicator('ok');
       if (!silent) showSlashBanner('☁️ SYNC CLOUD RÉUSSIE !');
       return true;
     } catch {
+      setSyncIndicator('offline');
       return false;
     }
   }
@@ -794,7 +873,10 @@
     SoundFX.click();
     if (id === 'modal-badges') renderBadgesModal();
     if (id === 'modal-sync') renderSyncModal();
-    if (id === 'modal-profiles') renderProfilesModal();
+    if (id === 'modal-profiles') {
+      renderProfilesModal();
+      pullAndMergeCloud(true).then(() => renderProfilesModal());
+    }
     $(id).classList.remove('hidden');
   }
 
@@ -1199,6 +1281,12 @@
         if (btn && !btn.disabled) btn.click();
       }
     }
+  });
+
+  // Auto-sync au retour sur l'appli ou au retour du réseau
+  window.addEventListener('online', () => pullAndMergeCloud(true));
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) pullAndMergeCloud(true);
   });
 
   // Init
