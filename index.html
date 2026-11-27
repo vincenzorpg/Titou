@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0f19">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Math Quest">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>MATH QUEST — Édition Titou (4ème)</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Fond animé discret -->
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div id="fx-layer" aria-hidden="true"></div>
+
+  <!-- BARRE SUPÉRIEURE (HUD PERSISTANT) -->
+  <header class="topbar">
+    <div class="brand" id="btn-home-logo" title="Retour au menu principal">
+      <div class="brand-badge">⚔️</div>
+      <div>
+        <div class="brand-title">MATH QUEST <span class="accent">TITOU</span></div>
+        <div class="brand-sub">Programme 4ème • Mode Héros</div>
+      </div>
+    </div>
+
+    <div class="hud-stats">
+      <div class="hud-pill rank-pill" id="hud-rank-pill">
+        <span class="pill-icon" id="hud-avatar">⛏️</span>
+        <div class="pill-info">
+          <div class="pill-label" id="hud-rank-name">Villageois</div>
+          <div class="xp-bar-mini">
+            <div class="xp-fill-mini" id="hud-xp-fill"></div>
+          </div>
+        </div>
+        <span class="lvl-badge">Niv. <span id="hud-level">1</span></span>
+      </div>
+
+      <div class="hud-pill" title="Émeraudes gagnées">
+        <span class="pill-icon">💎</span>
+        <span class="pill-val" id="hud-gems">0</span>
+      </div>
+
+      <div class="hud-pill" title="Meilleur combo">
+        <span class="pill-icon">🔥</span>
+        <span class="pill-val" id="hud-best-combo">0</span>
+      </div>
+    </div>
+
+    <div class="hud-actions">
+      <button class="icon-btn install-btn hidden" id="btn-install-pwa" title="Installer l'application sur ton téléphone ou PC">
+        📲 <span>Installer</span>
+      </button>
+      <button class="icon-btn" id="btn-sync" title="Synchroniser la progression entre Mobile et PC">
+        ☁️ <span>Sync</span>
+      </button>
+      <button class="icon-btn" id="btn-grimoire" title="Grimoire de révision (Formules & Astuces)">
+        📖 <span>Grimoire</span>
+      </button>
+      <button class="icon-btn" id="btn-badges" title="Trophées de Titou">
+        🏆 <span id="hud-badge-count">0/8</span>
+      </button>
+      <button class="icon-btn" id="btn-sound" title="Activer / Couper le son">
+        🔊
+      </button>
+    </div>
+  </header>
+
+  <main class="app-container">
+
+    <!-- ==================== ÉCRAN 1 : MENU PRINCIPAL ==================== -->
+    <section id="screen-menu" class="screen active">
+      <div class="hero-banner">
+        <div class="hero-text">
+          <div class="hero-tag">🎮 SESSION COURTE • 8 DÉFIS PAR QUÊTE</div>
+          <h1>Prêt à tout casser, <span class="gradient-text">Titou</span> ?</h1>
+          <p class="hero-desc">
+            Choisis ton univers, règle ton mode de jeu et enchaîne les combos pour débloquer le rang <strong>Héros de Classe S</strong> !
+          </p>
+        </div>
+
+        <!-- Réglages rapides TDAH-friendly -->
+        <div class="quick-settings">
+          <div class="setting-group">
+            <span class="setting-label">Difficulté</span>
+            <div class="segmented" id="diff-selector">
+              <button class="seg-btn active" data-diff="1">🌱 Apprenti</button>
+              <button class="seg-btn" data-diff="2">⚔️ Guerrier</button>
+              <button class="seg-btn" data-diff="3">🔥 Classe S</button>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-group">
+              <span class="setting-label">Réponses</span>
+              <div class="segmented" id="input-mode-selector">
+                <button class="seg-btn active" data-input="qcm">🎯 QCM Rapide</button>
+                <button class="seg-btn" data-input="type">⌨️ Clavier</button>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <span class="setting-label">Chrono</span>
+              <div class="segmented" id="timer-mode-selector">
+                <button class="seg-btn active" data-timer="off">😌 Détente</button>
+                <button class="seg-btn" data-timer="on">⚡ Turbo</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grille des 4 Mondes -->
+      <div class="worlds-grid">
+        <!-- Monde 1 : Minecraft / Pythagore -->
+        <article class="world-card theme-minecraft" data-world="pythagore">
+          <div class="world-card-top">
+            <span class="world-badge">MINECRAFT</span>
+            <span class="world-stars" id="stars-pythagore">☆☆☆</span>
+          </div>
+          <div class="world-art">
+            <svg viewBox="0 0 120 80" class="art-svg">
+              <!-- Blocs pixelisés + triangle rectangle -->
+              <rect x="10" y="55" width="16" height="16" fill="#4ade80" stroke="#14532d" stroke-width="2"/>
+              <rect x="26" y="55" width="16" height="16" fill="#4ade80" stroke="#14532d" stroke-width="2"/>
+              <rect x="10" y="39" width="16" height="16" fill="#86efac" stroke="#14532d" stroke-width="2"/>
+              <polygon points="34,64 102,64 34,16" fill="rgba(56,189,248,0.22)" stroke="#38bdf8" stroke-width="3" stroke-linejoin="round"/>
+              <rect x="34" y="54" width="10" height="10" fill="none" stroke="#facc15" stroke-width="2.5"/>
+              <text x="20" y="42" fill="#e2e8f0" font-size="11" font-weight="bold">a</text>
+              <text x="66" y="76" fill="#e2e8f0" font-size="11" font-weight="bold">b</text>
+              <text x="72" y="36" fill="#38bdf8" font-size="12" font-weight="bold">c ?</text>
+            </svg>
+          </div>
+          <h2>La Forteresse de Pythagore</h2>
+          <p class="world-topic">Théorème de Pythagore, hypoténuse, côtés & réciproque</p>
+          <ul class="world-tags">
+            <li>Hypoténuse</li>
+            <li>Côté manquant</li>
+            <li>Angle droit ?</li>
+          </ul>
+          <button class="play-btn">⛏️ Lancer la Quête</button>
+        </article>
+
+        <!-- Monde 2 : Berserk / Relatifs -->
+        <article class="world-card theme-berserk" data-world="relatifs">
+          <div class="world-card-top">
+            <span class="world-badge">BERSERK</span>
+            <span class="world-stars" id="stars-relatifs">☆☆☆</span>
+          </div>
+          <div class="world-art">
+            <svg viewBox="0 0 120 80" class="art-svg">
+              <!-- Éclipse rouge + épée Dragon Slayer -->
+              <circle cx="60" cy="36" r="24" fill="#0f0a0c" stroke="#ef4444" stroke-width="3"/>
+              <circle cx="60" cy="36" r="28" fill="none" stroke="rgba(239,68,68,0.35)" stroke-width="2" stroke-dasharray="4 3"/>
+              <polygon points="22,68 92,14 98,20 28,74" fill="#cbd5e1" stroke="#0f172a" stroke-width="2"/>
+              <line x1="25" y1="71" x2="95" y2="17" stroke="#64748b" stroke-width="2"/>
+              <text x="16" y="28" fill="#f87171" font-size="14" font-weight="900">(-)</text>
+              <text x="86" y="64" fill="#4ade80" font-size="14" font-weight="900">(+)</text>
+            </svg>
+          </div>
+          <h2>L'Arène des Relatifs</h2>
+          <p class="world-topic">Additions, soustractions, produits, quotients & priorités</p>
+          <ul class="world-tags">
+            <li>Règle des signes</li>
+            <li>× et ÷</li>
+            <li>Priorités</li>
+          </ul>
+          <button class="play-btn">⚔️ Dégainer l'Épée</button>
+        </article>
+
+        <!-- Monde 3 : Pokémon / Statistiques -->
+        <article class="world-card theme-pokemon" data-world="stats">
+          <div class="world-card-top">
+            <span class="world-badge">POKÉMON</span>
+            <span class="world-stars" id="stars-stats">☆☆☆</span>
+          </div>
+          <div class="world-art">
+            <svg viewBox="0 0 120 80" class="art-svg">
+              <!-- Barres de stats + Pokéball -->
+              <rect x="14" y="42" width="12" height="28" rx="3" fill="#facc15"/>
+              <rect x="30" y="26" width="12" height="44" rx="3" fill="#38bdf8"/>
+              <rect x="46" y="34" width="12" height="36" rx="3" fill="#a855f7"/>
+              <circle cx="88" cy="40" r="22" fill="#ef4444" stroke="#0f172a" stroke-width="3"/>
+              <path d="M66,40 A22,22 0 0,0 110,40 Z" fill="#f8fafc" stroke="#0f172a" stroke-width="3"/>
+              <line x1="66" y1="40" x2="110" y2="40" stroke="#0f172a" stroke-width="4"/>
+              <circle cx="88" cy="40" r="7" fill="#f8fafc" stroke="#0f172a" stroke-width="3"/>
+            </svg>
+          </div>
+          <h2>Le Labo des Statistiques</h2>
+          <p class="world-topic">Moyenne, médiane, étendue (écart) & effectifs</p>
+          <ul class="world-tags">
+            <li>Moyenne</li>
+            <li>Médiane</li>
+            <li>Étendue</li>
+          </ul>
+          <button class="play-btn">⚡ Analyser l'Équipe</button>
+        </article>
+
+        <!-- Monde 4 : One Punch Man / Boss Rush -->
+        <article class="world-card theme-opm" data-world="boss">
+          <div class="world-card-top">
+            <span class="world-badge">ONE PUNCH MAN</span>
+            <span class="world-stars" id="stars-boss">☆☆☆</span>
+          </div>
+          <div class="world-art">
+            <svg viewBox="0 0 120 80" class="art-svg">
+              <!-- Éclair jaune + poing rouge impact -->
+              <polygon points="60,6 70,26 92,22 76,40 94,56 70,54 62,74 52,54 28,58 44,40 26,24 50,26" fill="#facc15" opacity="0.28"/>
+              <circle cx="60" cy="40" r="22" fill="#dc2626" stroke="#fef08a" stroke-width="3"/>
+              <text x="60" y="47" text-anchor="middle" fill="#fff" font-size="22" font-weight="900">👊</text>
+            </svg>
+          </div>
+          <h2>Boss Rush : Classe S</h2>
+          <p class="world-topic">Mélange explosif des 3 chapitres + jauge Serious Punch !</p>
+          <ul class="world-tags">
+            <li>Pythagore</li>
+            <li>Relatifs</li>
+            <li>Stats</li>
+          </ul>
+          <button class="play-btn">🥊 Mode Serious Punch</button>
+        </article>
+      </div>
+    </section>
+
+    <!-- ==================== ÉCRAN 2 : ARÈNE DE JEU ==================== -->
+    <section id="screen-game" class="screen">
+      <!-- En-tête de partie -->
+      <div class="game-header">
+        <button class="btn-ghost" id="btn-quit-game">← Menu</button>
+
+        <div class="progress-wrap">
+          <div class="progress-meta">
+            <span id="game-world-label">Monde</span>
+            <span id="game-q-counter">Défi 1 / 8</span>
+          </div>
+          <div class="progress-dots" id="progress-dots"></div>
+        </div>
+
+        <div class="game-live-stats">
+          <div class="combo-pill" id="combo-pill">
+            🔥 x<span id="live-combo">0</span>
+          </div>
+          <div class="timer-pill hidden" id="timer-pill">
+            ⏱️ <span id="live-timer">25</span>s
+          </div>
+        </div>
+      </div>
+
+      <!-- Barre de Combat / Boss / Progression thématique -->
+      <div class="battle-stage" id="battle-stage">
+        <div class="fighter player-side">
+          <div class="fighter-icon" id="player-sprite">🦸</div>
+          <div class="fighter-info">
+            <div class="fighter-name">Titou</div>
+            <div class="charge-bar-wrap" title="3 bonnes réponses d'affilée = Coup Critique / Serious Punch !">
+              <div class="charge-label">⚡ Jauge Ultime</div>
+              <div class="bar-track">
+                <div class="bar-fill charge-fill" id="ult-fill" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="vs-badge" id="battle-action-text">VS</div>
+
+        <div class="fighter enemy-side">
+          <div class="fighter-info right">
+            <div class="fighter-name" id="enemy-name">Creeper Géométrique</div>
+            <div class="bar-track hp-track">
+              <div class="bar-fill hp-fill" id="enemy-hp-fill" style="width: 100%"></div>
+            </div>
+            <div class="hp-text"><span id="enemy-hp-text">100</span>% PV</div>
+          </div>
+          <div class="fighter-icon enemy-sprite" id="enemy-sprite">👾</div>
+        </div>
+      </div>
+
+      <!-- Carte Question -->
+      <div class="question-card" id="question-card">
+        <div class="q-top-row">
+          <span class="q-category-tag" id="q-category">Catégorie</span>
+          <button class="hint-btn" id="btn-hint">💡 Indice</button>
+        </div>
+
+        <div class="q-story" id="q-story"></div>
+        <div class="q-prompt" id="q-prompt"></div>
+
+        <!-- Visuel dynamique (SVG triangle, cartes Pokémon, formule stylisée...) -->
+        <div class="q-visual" id="q-visual"></div>
+
+        <!-- Outil interactif optionnel (ex: bouton Trier pour la médiane) -->
+        <div class="q-helper-tools" id="q-helper-tools"></div>
+
+        <!-- Zone d'indice dépliable -->
+        <div class="hint-box hidden" id="hint-box"></div>
+
+        <!-- Zone de réponses QCM -->
+        <div class="answers-grid" id="answers-qcm"></div>
+
+        <!-- Zone de réponse Clavier -->
+        <form class="answer-type-form hidden" id="answer-type-form">
+          <button type="button" class="sign-toggle-btn" id="btn-toggle-sign" title="Ajouter ou enlever le signe moins (−)">±</button>
+          <input
+            type="text"
+            id="answer-input"
+            class="answer-input"
+            placeholder="Ta réponse (ex: -12 ou 5,5)..."
+            autocomplete="off"
+            inputmode="decimal"
+          >
+          <button type="submit" class="btn-primary">Valider ↵</button>
+        </form>
+
+        <!-- Feedback immédiat + explication courte -->
+        <div class="feedback-box hidden" id="feedback-box">
+          <div class="feedback-head">
+            <span class="feedback-badge" id="feedback-badge">BIEN JOUÉ !</span>
+            <span class="feedback-xp" id="feedback-xp">+25 XP</span>
+          </div>
+          <div class="feedback-explain" id="feedback-explain"></div>
+          <button class="btn-primary next-btn" id="btn-next">Défi suivant →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== ÉCRAN 3 : RÉSUMÉ DE FIN DE QUÊTE ==================== -->
+    <section id="screen-result" class="screen">
+      <div class="result-card">
+        <div class="result-trophy" id="result-trophy">🏆</div>
+        <h2 id="result-title">QUÊTE TERMINÉE !</h2>
+        <p class="result-subtitle" id="result-subtitle">Bien joué Titou !</p>
+
+        <div class="result-stars" id="result-stars">★★★</div>
+
+        <div class="result-stats-grid">
+          <div class="res-stat">
+            <div class="res-val" id="res-score">8 / 8</div>
+            <div class="res-lbl">Bonnes réponses</div>
+          </div>
+          <div class="res-stat">
+            <div class="res-val" id="res-xp">+240 XP</div>
+            <div class="res-lbl">Expérience</div>
+          </div>
+          <div class="res-stat">
+            <div class="res-val" id="res-gems">+45 💎</div>
+            <div class="res-lbl">Émeraudes</div>
+          </div>
+          <div class="res-stat">
+            <div class="res-val" id="res-combo">🔥 x6</div>
+            <div class="res-lbl">Meilleur Combo</div>
+          </div>
+        </div>
+
+        <div class="unlocked-badges-box hidden" id="unlocked-badges-box">
+          <h3>✨ Nouveau(x) Trophée(s) débloqué(s) !</h3>
+          <div class="unlocked-list" id="unlocked-list"></div>
+        </div>
+
+        <div class="result-actions">
+          <button class="btn-primary" id="btn-replay">🔄 Rejouer ce monde</button>
+          <button class="btn-secondary" id="btn-back-menu">🗺️ Choisir un autre monde</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==================== MODALE : GRIMOIRE DES FORMULES ==================== -->
+  <div class="modal-backdrop hidden" id="modal-grimoire" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>📖 Le Grimoire de Titou (Mémo 4ème)</h2>
+        <button class="modal-close" data-close="modal-grimoire">✕</button>
+      </div>
+      <div class="modal-tabs" id="grimoire-tabs">
+        <button class="tab-btn active" data-tab="g-pyth">⛏️ Pythagore</button>
+        <button class="tab-btn" data-tab="g-rel">⚔️ Relatifs</button>
+        <button class="tab-btn" data-tab="g-stat">⚡ Statistiques</button>
+      </div>
+      <div class="modal-body">
+        <!-- Tab Pythagore -->
+        <div class="tab-panel active" id="g-pyth">
+          <div class="memo-card">
+            <h3>1. L'Hypoténuse = le plus grand côté</h3>
+            <p>Elle est toujours <strong>en face de l'angle droit</strong>.</p>
+            <div class="formula-pill">Hypoténuse² = Côté1² + Côté2²</div>
+          </div>
+          <div class="memo-card">
+            <h3>2. Chercher l'hypoténuse → ON ADDITIONNE (+)</h3>
+            <p>Exemple : côtés 3 et 4 → <code>3² + 4² = 9 + 16 = 25</code> → <code>√25 = 5</code>.</p>
+          </div>
+          <div class="memo-card">
+            <h3>3. Chercher un petit côté → ON SOUSTRAIT (-)</h3>
+            <p>Exemple : hypoténuse 10 et côté 6 → <code>10² - 6² = 100 - 36 = 64</code> → <code>√64 = 8</code>.</p>
+          </div>
+          <div class="memo-card">
+            <h3>4. Vérifier si un triangle est rectangle (Réciproque)</h3>
+            <p>Compare <strong>(plus grand côté)²</strong> et <strong>(autre1² + autre2²)</strong>.<br>
+            ✅ Égaux = <strong>Rectangle</strong> • ❌ Différents = <strong>Pas rectangle</strong>.</p>
+          </div>
+        </div>
+
+        <!-- Tab Relatifs -->
+        <div class="tab-panel" id="g-rel">
+          <div class="memo-card">
+            <h3>1. Addition (+) : l'ascenseur !</h3>
+            <ul>
+              <li><strong>Même signe</strong> : on additionne les distances et on garde le signe.<br>
+              Ex : <code>-4 + (-5) = -9</code></li>
+              <li><strong>Signes différents</strong> : le plus fort gagne, on fait la différence.<br>
+              Ex : <code>-8 + 5 = -3</code> • <code>-4 + 10 = +6</code></li>
+            </ul>
+          </div>
+          <div class="memo-card">
+            <h3>2. Soustraction (-) : soustraire un négatif = ajouter !</h3>
+            <div class="formula-pill">a - (-b) = a + b</div>
+            <p>Ex : <code>5 - (-3) = 5 + 3 = 8</code></p>
+          </div>
+          <div class="memo-card">
+            <h3>3. Multiplication (×) et Division (÷) : Règle des signes</h3>
+            <div class="sign-grid">
+              <span class="sign-ok">(+) × (+) = (+)</span>
+              <span class="sign-ok">(-) × (-) = (+)</span>
+              <span class="sign-bad">(+) × (-) = (-)</span>
+              <span class="sign-bad">(-) × (+) = (-)</span>
+            </div>
+            <p><strong>Astuce :</strong> Mêmes signes = <strong>+</strong> • Signes contraires = <strong>-</strong>.</p>
+          </div>
+          <div class="memo-card">
+            <h3>4. Priorités opératoires</h3>
+            <p>Toujours dans l'ordre : <strong>1. Parenthèses</strong> → <strong>2. × et ÷</strong> → <strong>3. + et -</strong>.</p>
+          </div>
+        </div>
+
+        <!-- Tab Statistiques -->
+        <div class="tab-panel" id="g-stat">
+          <div class="memo-card">
+            <h3>1. La Moyenne</h3>
+            <div class="formula-pill">Moyenne = Somme de toutes les valeurs ÷ Nombre de valeurs</div>
+            <p>Ex : notes 10, 14, 18 → <code>(10 + 14 + 18) ÷ 3 = 42 ÷ 3 = 14</code>.</p>
+          </div>
+          <div class="memo-card">
+            <h3>2. La Médiane (la valeur du MILIEU)</h3>
+            <p>⚠️ <strong>ÉTAPE 1 OBLIGATOIRE : TRIER</strong> du plus petit au plus grand !</p>
+            <ul>
+              <li>Effectif <strong>impair</strong> (ex: 5 valeurs) : c'est la 3ème valeur (pile au milieu).</li>
+              <li>Effectif <strong>pair</strong> (ex: 4 valeurs) : c'est la moyenne des 2 valeurs du milieu.</li>
+            </ul>
+          </div>
+          <div class="memo-card">
+            <h3>3. L'Étendue (l'écart total)</h3>
+            <div class="formula-pill">Étendue = Valeur MAX − Valeur MIN</div>
+            <p>Ex : de 12 à 45 → <code>45 - 12 = 33</code>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODALE : TROPHÉES / BADGES ==================== -->
+  <div class="modal-backdrop hidden" id="modal-badges" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>🏆 Salle des Trophées de Titou</h2>
+        <button class="modal-close" data-close="modal-badges">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="badges-grid" id="badges-grid"></div>
+        <div class="reset-zone">
+          <button class="btn-danger-ghost" id="btn-reset-save">Réinitialiser la progression</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODALE : SYNC PC ↔ MOBILE ==================== -->
+  <div class="modal-backdrop hidden" id="modal-sync" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>☁️ Synchronisation PC ↔ Mobile</h2>
+        <button class="modal-close" data-close="modal-sync">✕</button>
+      </div>
+      <div class="modal-body sync-body">
+        <div class="memo-card">
+          <h3>1. Envoyer ta progression vers un autre appareil</h3>
+          <p class="sync-help">
+            Ouvre ce <strong>Lien Magique</strong> sur ton téléphone ou ton PC (ou envoie-le par WhatsApp / SMS) : tes XP, étoiles et trophées seront fusionnés sans rien perdre !
+          </p>
+          <div class="sync-actions-row">
+            <button class="btn-primary" id="btn-share-link">📤 Partager le lien</button>
+            <button class="btn-secondary" id="btn-copy-link">📋 Copier le lien</button>
+          </div>
+          <div class="sync-code-wrap">
+            <label for="sync-code-out" class="setting-label">Ou ton Code Héros :</label>
+            <div class="sync-inline">
+              <input type="text" id="sync-code-out" class="sync-input" readonly>
+              <button class="icon-btn" id="btn-copy-code">📋</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="memo-card">
+          <h3>2. Charger un Code Héros ici</h3>
+          <div class="sync-inline">
+            <input type="text" id="sync-code-in" class="sync-input" placeholder="Colle le Code Héros ou le lien ici...">
+            <button class="btn-primary" id="btn-import-code">Importer</button>
+          </div>
+          <p class="sync-status" id="sync-status-msg"></p>
+        </div>
+
+        <details class="memo-card cloud-details">
+          <summary>⚡ Option avancée : Sync Cloud Automatique en direct (Firebase)</summary>
+          <p class="sync-help" style="margin-top:8px;">
+            Pour une synchro 100 % automatique à chaque partie sans jamais copier de lien, colle ici l’URL d’une base gratuite <strong>Firebase Realtime Database</strong> (ex : <code>https://ton-projet.europe-west1.firebasedatabase.app</code>) + un mot secret commun.
+          </p>
+          <div class="cloud-form">
+            <input type="url" id="cloud-url-input" class="sync-input" placeholder="URL Firebase Realtime Database">
+            <input type="text" id="cloud-key-input" class="sync-input" placeholder="Identifiant du profil (ex: titou-4e)">
+            <div class="sync-actions-row">
+              <button class="btn-primary" id="btn-save-cloud">💾 Activer la Sync Auto</button>
+              <button class="btn-secondary" id="btn-sync-now">🔄 Synchroniser maintenant</button>
+            </div>
+            <p class="sync-status" id="cloud-status-msg"></p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <script src="audio.js"></script>
+  <script src="questions.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
