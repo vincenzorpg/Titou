@@ -1473,18 +1473,85 @@
       return String(rounded).replace('.', ',');
     }
 
+    function replaceSquares(str) {
+      let s = str;
+      let guard = 0;
+      while (s.includes('²') && guard < 30) {
+        guard++;
+        const idx = s.indexOf('²');
+        let start = idx - 1;
+        if (start < 0) throw new Error('Invalid square');
+
+        if (s[start] === ')') {
+          // Remonter jusqu'à la parenthèse ouvrante correspondante (+ éventuel Math.sqrt / Math.pow)
+          let depth = 0;
+          while (start >= 0) {
+            if (s[start] === ')') depth++;
+            else if (s[start] === '(') {
+              depth--;
+              if (depth === 0) break;
+            }
+            start--;
+          }
+          if (depth !== 0) throw new Error('Unmatched paren');
+          // Inclure un préfixe éventuel comme Math.sqrt ou Math.pow
+          while (start > 0 && /[a-zA-Z0-9_.]/.test(s[start - 1])) {
+            start--;
+          }
+        } else if (/[0-9.]/.test(s[start])) {
+          while (start > 0 && /[0-9.]/.test(s[start - 1])) {
+            start--;
+          }
+        } else {
+          throw new Error('Invalid square operand');
+        }
+
+        const operand = s.slice(start, idx);
+        s = `${s.slice(0, start)}Math.pow(${operand},2)${s.slice(idx + 1)}`;
+      }
+      return s;
+    }
+
     function safeEval(str) {
-      const normalized = str
+      let s = str
         .replace(/×/g, '*')
         .replace(/÷/g, '/')
         .replace(/−/g, '-')
         .replace(/,/g, '.')
+        .replace(/\s+/g, '')
         .trim();
-      if (!normalized || !/^[0-9+\-*/().\s]+$/.test(normalized)) {
+
+      if (!s) throw new Error('Empty');
+
+      // Auto-fermer les parenthèses oubliées à la fin (comme sur Casio Collège)
+      let openCount = 0;
+      for (const ch of s) {
+        if (ch === '(') openCount++;
+        else if (ch === ')') openCount--;
+      }
+      if (openCount < 0) throw new Error('Bad parens');
+      if (openCount > 0) s += ')'.repeat(openCount);
+
+      // Multiplications implicites : 2(3), 2√(9), )√(9), ²(, ²√(
+      s = s
+        .replace(/([0-9.)²])√\(/g, '$1*√(')
+        .replace(/([0-9.)²])\(/g, '$1*(')
+        .replace(/\)([0-9.])/g, ')*$1');
+
+      // Remplacer √( par Math.sqrt(
+      s = s.replace(/√\(/g, 'Math.sqrt(');
+
+      // Remplacer les carrés ² par Math.pow(..., 2)
+      s = replaceSquares(s);
+
+      // Validation stricte avant évaluation
+      const stripped = s.replace(/Math\.sqrt/g, '').replace(/Math\.pow/g, '');
+      if (!/^[0-9+\-*/().,]+$/.test(stripped)) {
         throw new Error('Invalid');
       }
+
       // eslint-disable-next-line no-new-func
-      const val = Function(`"use strict"; return (${normalized});`)();
+      const val = Function(`"use strict"; return (${s});`)();
       if (typeof val !== 'number' || !Number.isFinite(val)) throw new Error('NaN');
       return val;
     }
@@ -1550,6 +1617,8 @@
         if (justEvaluated) {
           expr = '';
           justEvaluated = false;
+        } else if (expr.endsWith('√(')) {
+          expr = expr.slice(0, -2);
         } else {
           expr = expr.slice(0, -1);
         }
@@ -1557,37 +1626,36 @@
         return;
       }
       if (act === 'neg') {
-        if (!expr) {
+        if (!expr || expr === 'Erreur') {
           expr = '-';
         } else if (expr.startsWith('-')) {
           expr = expr.slice(1);
         } else {
-          expr = `-(${expr})`;
+          expr = `-${expr}`;
         }
         justEvaluated = false;
         updateUI();
         return;
       }
-      if (act === 'sq' || act === 'sqrt') {
-        try {
-          const cur = expr ? safeEval(expr) : 0;
-          if (act === 'sqrt' && cur < 0) {
-            expr = 'Erreur';
-            lastResult = null;
-            updateUI(`√(${fmtCalc(cur)}) =`);
-            return;
-          }
-          const res = act === 'sq' ? cur * cur : Math.sqrt(cur);
-          const hist = act === 'sq' ? `(${fmtCalc(cur)})² =` : `√(${fmtCalc(cur)}) =`;
-          lastResult = res;
-          expr = fmtCalc(res);
-          justEvaluated = true;
-          updateUI(hist);
-        } catch {
-          expr = 'Erreur';
-          lastResult = null;
-          updateUI();
+      if (act === 'sq') {
+        if (expr === 'Erreur') expr = '';
+        if (justEvaluated && lastResult !== null) {
+          expr = `${fmtCalc(lastResult)}²`;
+          justEvaluated = false;
+        } else if (expr && /[0-9)]$/.test(expr)) {
+          expr += '²';
         }
+        updateUI();
+        return;
+      }
+      if (act === 'sqrt') {
+        if (justEvaluated || expr === 'Erreur') {
+          expr = '√(';
+          justEvaluated = false;
+        } else {
+          expr += '√(';
+        }
+        updateUI();
         return;
       }
       if (act === 'eq') {
