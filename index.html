@@ -70,7 +70,7 @@
       <button class="icon-btn install-btn hidden" id="btn-install-pwa" title="Installer l'application sur ton téléphone ou PC">
         📲 <span>Installer</span>
       </button>
-      <button class="icon-btn switch-btn" id="btn-rewards" title="Récompenses : 30 min de révision = 30 min de Switch">
+      <button class="icon-btn switch-btn" id="btn-rewards" title="Récompenses Switch : gagne des minutes selon ton score en fin de quête">
         🎮 <span id="hud-switch-mins">0m</span>
       </button>
       <button class="icon-btn" id="btn-sync" title="Synchroniser la progression entre Mobile et PC">
@@ -378,6 +378,10 @@
             <div class="res-val" id="res-score">8 / 8</div>
             <div class="res-lbl">Bonnes réponses</div>
           </div>
+          <div class="res-stat res-stat-switch">
+            <div class="res-val" id="res-switch">+7 min 🎮</div>
+            <div class="res-lbl">Temps Switch gagné</div>
+          </div>
           <div class="res-stat">
             <div class="res-val" id="res-xp">+240 XP</div>
             <div class="res-lbl">Expérience</div>
@@ -655,26 +659,30 @@
       </div>
       <div class="modal-body sync-body">
         <div class="switch-hero-card">
-          <div class="switch-rule-tag">⏱️ 1 MIN DE RÉVISION ACTIVE = 1 MIN DE SWITCH</div>
+          <div class="switch-rule-tag">🏆 TERMINE UNE QUÊTE = GAGNE DU TEMPS SWITCH SELON TON SCORE !</div>
           <div class="switch-big-balance">
             <span id="reward-avail-mins">0</span> <small>min de Switch dispo</small>
           </div>
           <div class="switch-goal-wrap">
             <div class="switch-goal-meta">
-              <span>Prochain palier 30 min</span>
+              <span>Objectif 30 min de Switch</span>
               <span id="reward-goal-text">0 / 30 min</span>
             </div>
             <div class="bar-track" style="height:12px;">
               <div class="bar-fill switch-fill" id="reward-goal-fill" style="width:0%"></div>
             </div>
           </div>
-          <div class="switch-substats">
-            <div>📅 Aujourd'hui : <strong id="reward-today-time">0 min 00 s</strong></div>
-            <div>🏆 Total révisé : <strong id="reward-total-time">0 min</strong></div>
+          <div class="switch-bareme">
+            <span>4–5/8 → <strong>+2m</strong></span>
+            <span>6/8 → <strong>+3m</strong></span>
+            <span>7/8 → <strong>+5m</strong></span>
+            <span>8/8 → <strong>+7m</strong></span>
+            <span class="bareme-bonus">⚔️ Guerrier +1m • 🔥 Classe S +2m</span>
           </div>
-          <p class="switch-note">
-            Le chrono tourne automatiquement pendant les quêtes et les cours du Dojo (et se met en pause si tu ne touches plus l’écran).
-          </p>
+          <div class="switch-substats">
+            <div>🎯 Quêtes finies : <strong id="reward-quests-done">0</strong></div>
+            <div>📅 Temps actif : <strong id="reward-today-time">0 min</strong></div>
+          </div>
         </div>
 
         <!-- Boutique Émeraudes -> Bonus Switch -->

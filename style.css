@@ -2322,6 +2322,39 @@ button, .world-card {
   color: var(--muted);
 }
 
+.switch-bareme {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 10px 0 12px;
+}
+
+.switch-bareme span {
+  font-size: 0.76rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  color: #e2e8f0;
+}
+
+.switch-bareme .bareme-bonus {
+  border-color: rgba(250, 204, 21, 0.45);
+  color: #fde047;
+  font-weight: 700;
+}
+
+.res-stat-switch {
+  grid-column: span 2;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.16), rgba(56, 189, 248, 0.16));
+  border-color: rgba(56, 189, 248, 0.45);
+}
+
+.res-stat-switch .res-val {
+  color: #7dd3fc;
+}
+
 .sign-toggle-btn {
   min-width: 50px;
   background: var(--bg-elev);

@@ -95,7 +95,7 @@
     { id: 'quests_15',    icon: '🛡️', title: 'Vétéran de la 4ème',  desc: 'Terminer 15 quêtes au total.' },
     { id: 'quests_30',    icon: '👑', title: 'Roi de l’Arène',      desc: 'Terminer 30 quêtes au total.' },
     { id: 'time_15',      icon: '🕒', title: 'Échauffement 15 min', desc: 'Cumuler 15 minutes de révision active.' },
-    { id: 'time_30',      icon: '🎮', title: 'Palier Switch 30m',   desc: 'Débloquer tes premières 30 min de Switch !' },
+    { id: 'time_30',      icon: '🎮', title: 'Palier Switch 30m',   desc: 'Gagner 30 minutes de Switch au total !' },
     { id: 'time_60',      icon: '🏆', title: 'Heure Héroïque',      desc: 'Cumuler 60 minutes de révision active.' },
     { id: 'lvl_35',       icon: '🟡', title: 'Éveil Super Saiyan',  desc: 'Atteindre le Niveau 35 (Super Saiyan 1).' },
     { id: 'lvl_100',      icon: '🌌', title: 'Super Saiyan 6 !',    desc: 'Atteindre le Niveau 100 ultime.' }
@@ -167,6 +167,7 @@
       studySeconds: 0,
       todayDate: todayKey(),
       todaySeconds: 0,
+      switchMinutesEarned: 0,
       bonusSwitchMinutes: 0,
       switchMinutesUsed: 0,
       questsCompleted: 0,
@@ -174,11 +175,23 @@
     };
   }
 
+  function calcSwitchReward(score, diff) {
+    if (score < 4) return 0;
+    let mins = 2; // 4 ou 5 / 8
+    if (score === 6) mins = 3;
+    else if (score === 7) mins = 5;
+    else if (score >= 8) mins = 7;
+    if (score >= 5) {
+      if (diff === 2) mins += 1;
+      else if (diff >= 3) mins += 2;
+    }
+    return mins;
+  }
+
   function getAvailableSwitchMinutes(p = profile) {
-    const earnedFromTime = Math.floor((p.studySeconds || 0) / 60);
-    const bonus = p.bonusSwitchMinutes || 0;
+    const earned = (p.switchMinutesEarned || 0) + (p.bonusSwitchMinutes || 0);
     const used = p.switchMinutesUsed || 0;
-    return Math.max(0, earnedFromTime + bonus - used);
+    return Math.max(0, earned - used);
   }
 
   function normalizeProfile(raw, fallbackName = 'Titou') {
@@ -298,6 +311,7 @@
       studySeconds: Math.max(Number(localP.studySeconds) || 0, Number(incomingP.studySeconds) || 0),
       todayDate: today,
       todaySeconds: Math.max(localTodaySec, incTodaySec),
+      switchMinutesEarned: Math.max(Number(localP.switchMinutesEarned) || 0, Number(incomingP.switchMinutesEarned) || 0),
       bonusSwitchMinutes: Math.max(Number(localP.bonusSwitchMinutes) || 0, Number(incomingP.bonusSwitchMinutes) || 0),
       switchMinutesUsed: Math.max(Number(localP.switchMinutesUsed) || 0, Number(incomingP.switchMinutesUsed) || 0),
       questsCompleted: Math.max(Number(localP.questsCompleted) || 0, Number(incomingP.questsCompleted) || 0),
@@ -481,6 +495,7 @@
           (lProf.gems || 0) > (rProf.gems || 0) ||
           (lProf.badges || []).length > (rProf.badges || []).length ||
           (lProf.studySeconds || 0) > (rProf.studySeconds || 0) ||
+          (lProf.switchMinutesEarned || 0) > (rProf.switchMinutesEarned || 0) ||
           (lProf.bonusSwitchMinutes || 0) > (rProf.bonusSwitchMinutes || 0) ||
           (lProf.switchMinutesUsed || 0) > (rProf.switchMinutesUsed || 0);
         if (needsPush) {
@@ -1004,6 +1019,8 @@
     profile.xp += session.xpEarned;
     profile.gems += session.gemsEarned;
     profile.questsCompleted = (profile.questsCompleted || 0) + 1;
+    const switchGained = calcSwitchReward(session.score, session.diff);
+    profile.switchMinutesEarned = (profile.switchMinutesEarned || 0) + switchGained;
     if (session.maxCombo > profile.bestCombo) profile.bestCombo = session.maxCombo;
 
     // Calcul des étoiles
@@ -1038,8 +1055,9 @@
     if (profile.questsCompleted >= 5) unlock('quests_5');
     if (profile.questsCompleted >= 15) unlock('quests_15');
     if (profile.questsCompleted >= 30) unlock('quests_30');
+    const totalSwitchEver = (profile.switchMinutesEarned || 0) + (profile.bonusSwitchMinutes || 0);
     if (totalMins >= 15) unlock('time_15');
-    if (totalMins >= 30) unlock('time_30');
+    if (totalSwitchEver >= 30) unlock('time_30');
     if (totalMins >= 60) unlock('time_60');
     if (lvlAfter >= 35) unlock('lvl_35');
     if (lvlAfter >= 100) unlock('lvl_100');
@@ -1078,6 +1096,7 @@
 
     $('result-stars').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
     $('res-score').textContent = `${session.score} / ${QUEST_LENGTH}`;
+    $('res-switch').textContent = switchGained > 0 ? `+${switchGained} min 🎮` : '0 min (vise ≥ 4/8 !)';
     $('res-xp').textContent = `+${session.xpEarned} XP`;
     $('res-gems').textContent = `+${session.gemsEarned} 💎`;
     $('res-combo').textContent = `🔥 x${session.maxCombo}`;
@@ -1557,13 +1576,7 @@
 
     const newMins = Math.floor(profile.studySeconds / 60);
     if (newMins > prevMins) {
-      // Déblocage instantané des trophées de temps
       if (newMins >= 15 && !profile.badges.includes('time_15')) profile.badges.push('time_15');
-      if (newMins >= 30 && !profile.badges.includes('time_30')) {
-        profile.badges.push('time_30');
-        showSlashBanner('🎮 30 MIN DE SWITCH DÉBLOQUÉES !');
-        SoundFX.victory();
-      }
       if (newMins >= 60 && !profile.badges.includes('time_60')) profile.badges.push('time_60');
       persistSave(true);
       renderHUD();
@@ -1579,7 +1592,6 @@
 
   function renderRewardsModal() {
     const avail = getAvailableSwitchMinutes(profile);
-    const totalMins = Math.floor((profile.studySeconds || 0) / 60);
     const today = todayKey();
     const tSec = profile.todayDate === today ? (profile.todaySeconds || 0) : 0;
     const tM = Math.floor(tSec / 60);
@@ -1591,7 +1603,8 @@
     $('reward-goal-text').textContent = `${goalProgress} / 30 min`;
     $('reward-goal-fill').style.width = `${Math.min(100, Math.round((goalProgress / 30) * 100))}%`;
     $('reward-today-time').textContent = `${tM} min ${tS} s`;
-    $('reward-total-time').textContent = `${totalMins} min`;
+    const questsEl = $('reward-quests-done');
+    if (questsEl) questsEl.textContent = profile.questsCompleted || 0;
     $('reward-gems-balance').textContent = profile.gems || 0;
   }
 
