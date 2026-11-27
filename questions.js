@@ -110,17 +110,53 @@ const MathGen = (() => {
     `;
   }
 
-  function generatePythagore(diff) {
+  function generatePythagore(level) {
     const modeRoll = Math.random();
     const letters = pick([['A', 'B', 'C'], ['M', 'N', 'P'], ['S', 'T', 'V'], ['D', 'E', 'F']]);
     const story = pick(MC_STORIES);
 
-    // 1) Réciproque / Contraposée (25% des questions)
-    if (modeRoll < 0.27) {
+    // Niveaux 8 à 10 : Problèmes complexes multi-étapes (Périmètre, Diagonale d'un rectangle, Échelle)
+    if (level >= 8 && modeRoll < 0.45) {
+      const sub = randInt(1, 2);
+      const [a, b, c] = pick([...PYTH_TRIPLETS_EASY, ...PYTH_TRIPLETS_MED]);
+      if (sub === 1) {
+        // Problème à 2 étapes : trouver l'hypoténuse PUIS calculer le périmètre du triangle !
+        const perim = a + b + c;
+        return {
+          topic: 'pythagore',
+          category: `⛏️ Pythagore • Problème (Palier ${level})`,
+          story: '🏰 Défi d’architecte expert ! Tu dois clôturer tout le tour de ta base triangulaire.',
+          prompt: `Les deux côtés de l’angle droit mesurent ${a} blocs et ${b} blocs. Quel est le PÉRIMÈTRE TOTAL du triangle ${letters.join('')} ?`,
+          visualHtml: renderTriangleSVG({ aLabel: `${a}`, bLabel: `${b}`, cLabel: '?', rightAngle: true, letters }),
+          hint: `Problème en 2 étapes : 1) Calcule l’hypoténuse avec Pythagore (${a}² + ${b}² = ${c}²). 2) Additionne les 3 côtés !`,
+          answer: fmtNum(perim),
+          numericAnswer: perim,
+          choices: makeNumericChoices(perim, [c, a + b, perim + 2, perim - 3], false),
+          explain: `1) Hypoténuse = √(${a}² + ${b}²) = √${c * c} = <strong>${c}</strong>.<br>2) Périmètre = ${a} + ${b} + ${c} = <strong>${perim}</strong>.`
+        };
+      }
+      // Sub 2 : Problème d'échelle / diagonale de mur (avec aire du triangle !)
+      const area = (a * b) / 2;
+      return {
+        topic: 'pythagore',
+        category: `⛏️ Pythagore • Problème Aire (Palier ${level})`,
+        story: '💎 Tu veux paver tout le sol de ta salle triangulaire en blocs d’émeraude !',
+        prompt: `L’hypoténuse vaut ${c} et la base vaut ${b}. Calcule l’AIRE de ce triangle rectangle :`,
+        visualHtml: renderTriangleSVG({ aLabel: '?', bLabel: `${b}`, cLabel: `${c}`, rightAngle: true, letters }),
+        hint: `2 étapes : 1) Trouve la hauteur manquante avec Pythagore (√(${c}² − ${b}²)). 2) Aire = (Base × Hauteur) ÷ 2 !`,
+        answer: fmtNum(area),
+        numericAnswer: area,
+        choices: makeNumericChoices(area, [a, a * b, (b * c) / 2, area + 4], false),
+        explain: `1) Hauteur = √(${c}² − ${b}²) = √${a * a} = <strong>${a}</strong>.<br>2) Aire = (${b} × ${a}) ÷ 2 = <strong>${fmtNum(area)}</strong>.`
+      };
+    }
+
+    // 1) Réciproque / Contraposée (dès Palier 3)
+    if (level >= 3 && modeRoll < 0.30) {
       const isRight = Math.random() < 0.5;
       let a, b, c;
       if (isRight) {
-        const pool = diff === 1 ? PYTH_TRIPLETS_EASY : [...PYTH_TRIPLETS_EASY, ...PYTH_TRIPLETS_MED];
+        const pool = level <= 4 ? PYTH_TRIPLETS_EASY : [...PYTH_TRIPLETS_EASY, ...PYTH_TRIPLETS_MED];
         [a, b, c] = pick(pool);
       } else {
         const base = pick(PYTH_TRIPLETS_EASY);
@@ -136,70 +172,51 @@ const MathGen = (() => {
 
       return {
         topic: 'pythagore',
-        category: '⛏️ Pythagore • Réciproque',
+        category: `⛏️ Pythagore • Réciproque (Palier ${level})`,
         story,
         prompt: `Le triangle ${letters.join('')} a pour côtés ${a}, ${b} et ${c}. Possède-t-il un angle droit en ${letters[1]} ?`,
-        visualHtml: renderTriangleSVG({
-          aLabel: `${a}`,
-          bLabel: `${b}`,
-          cLabel: `${c}`,
-          rightAngle: false,
-          letters
-        }),
+        visualHtml: renderTriangleSVG({ aLabel: `${a}`, bLabel: `${b}`, cLabel: `${c}`, rightAngle: false, letters }),
         hint: `Compare le carré du plus grand côté (${c}²) avec la somme des carrés des deux autres (${a}² + ${b}²).`,
         answer: ans,
         choices: ['OUI, il est rectangle', 'NON, pas rectangle'],
         forceQcm: true,
         explain: `Plus grand côté : <strong>${c}² = ${hypSq}</strong>.<br>Autres côtés : <strong>${a}² + ${b}² = ${a * a} + ${b * b} = ${sumSq}</strong>.<br>${
           isRight
-            ? `✅ ${hypSq} = ${sumSq} → D’après la réciproque de Pythagore, le triangle <strong>est rectangle</strong> !`
+            ? `✅ ${hypSq} = ${sumSq} → Le triangle <strong>est rectangle</strong> !`
             : `❌ ${hypSq} ≠ ${sumSq} → Le triangle <strong>n’est pas rectangle</strong> !`
         }`
       };
     }
 
-    // 2) Calculer l'hypoténuse (40% des questions)
-    if (modeRoll < 0.67) {
+    // 2) Calculer l'hypoténuse
+    if (level <= 2 || modeRoll < 0.65) {
       let a, b, c, approx = false;
-      if (diff === 1 || (diff === 2 && Math.random() < 0.6)) {
-        const pool = diff === 1 ? PYTH_TRIPLETS_EASY : [...PYTH_TRIPLETS_EASY, ...PYTH_TRIPLETS_MED];
+      if (level <= 5 || Math.random() < 0.45) {
+        const pool = level <= 3 ? PYTH_TRIPLETS_EASY : [...PYTH_TRIPLETS_EASY, ...PYTH_TRIPLETS_MED];
         [a, b, c] = pick(pool);
       } else {
-        // Calcul avec arrondi au dixième
-        a = randInt(3, diff === 3 ? 11 : 8);
-        b = randInt(4, diff === 3 ? 12 : 9);
+        a = randInt(4, level >= 8 ? 14 : 9);
+        b = randInt(5, level >= 8 ? 15 : 10);
         const exact = Math.sqrt(a * a + b * b);
-        if (Number.isInteger(exact)) {
-          c = exact;
-        } else {
+        if (Number.isInteger(exact)) c = exact;
+        else {
           c = Math.round(exact * 10) / 10;
           approx = true;
         }
       }
 
       const sumSq = a * a + b * b;
-      const distractors = [
-        a + b,
-        Math.abs(a - b) + 2,
-        Math.round((c + 1) * 10) / 10,
-        Math.round(Math.max(1, c - 1.2) * 10) / 10
-      ];
+      const distractors = [a + b, Math.abs(a - b) + 2, Math.round((c + 1) * 10) / 10, Math.round(Math.max(1, c - 1.2) * 10) / 10];
 
       return {
         topic: 'pythagore',
-        category: '⛏️ Pythagore • Hypoténuse',
+        category: `⛏️ Pythagore • Hypoténuse (Palier ${level})`,
         story,
         prompt: approx
           ? `Calcule la longueur de l’hypoténuse ${letters[0]}${letters[2]} (arrondie au dixième) :`
           : `Calcule la longueur exacte de l’hypoténuse ${letters[0]}${letters[2]} :`,
-        visualHtml: renderTriangleSVG({
-          aLabel: `${a}`,
-          bLabel: `${b}`,
-          cLabel: `?`,
-          rightAngle: true,
-          letters
-        }),
-        hint: `On cherche le plus grand côté (en face de l'angle droit) : <strong>${letters[0]}${letters[2]}² = ${a}² + ${b}²</strong>, puis prends la racine carrée √.`,
+        visualHtml: renderTriangleSVG({ aLabel: `${a}`, bLabel: `${b}`, cLabel: `?`, rightAngle: true, letters }),
+        hint: `On cherche le plus grand côté : <strong>${letters[0]}${letters[2]}² = ${a}² + ${b}²</strong>, puis racine carrée √.`,
         answer: fmtNum(c),
         numericAnswer: c,
         choices: makeNumericChoices(c, distractors, false),
@@ -207,33 +224,25 @@ const MathGen = (() => {
       };
     }
 
-    // 3) Calculer un côté de l'angle droit (33% des questions)
-    const pool = diff === 1 ? PYTH_TRIPLETS_EASY : [...PYTH_TRIPLETS_EASY, ...PYTH_TRIPLETS_MED];
+    // 3) Calculer un côté de l'angle droit
+    const pool = level <= 4 ? PYTH_TRIPLETS_EASY : [...PYTH_TRIPLETS_EASY, ...PYTH_TRIPLETS_MED];
     const [a, b, c] = pick(pool);
     const askVertical = Math.random() < 0.5;
     const known = askVertical ? b : a;
     const missing = askVertical ? a : b;
     const missingSeg = askVertical ? `${letters[0]}${letters[1]}` : `${letters[1]}${letters[2]}`;
-
     const wrongAdd = Math.round(Math.sqrt(c * c + known * known) * 10) / 10;
-    const distractors = [c - known, wrongAdd, missing + 2, Math.max(1, missing - 1)];
 
     return {
       topic: 'pythagore',
-      category: '⛏️ Pythagore • Côté manquant',
+      category: `⛏️ Pythagore • Côté manquant (Palier ${level})`,
       story,
       prompt: `L’hypoténuse vaut ${c} et un côté vaut ${known}. Calcule la longueur du côté ${missingSeg} :`,
-      visualHtml: renderTriangleSVG({
-        aLabel: askVertical ? '?' : `${a}`,
-        bLabel: askVertical ? `${b}` : '?',
-        cLabel: `${c}`,
-        rightAngle: true,
-        letters
-      }),
-      hint: `Attention ! On connaît déjà l’hypoténuse (${c}). Il faut <strong>SOUSTRAIRE</strong> : ${missingSeg}² = ${c}² − ${known}².`,
+      visualHtml: renderTriangleSVG({ aLabel: askVertical ? '?' : `${a}`, bLabel: askVertical ? `${b}` : '?', cLabel: `${c}`, rightAngle: true, letters }),
+      hint: `On connaît déjà l’hypoténuse (${c}) → il faut <strong>SOUSTRAIRE</strong> : ${missingSeg}² = ${c}² − ${known}².`,
       answer: fmtNum(missing),
       numericAnswer: missing,
-      choices: makeNumericChoices(missing, distractors, false),
+      choices: makeNumericChoices(missing, [c - known, wrongAdd, missing + 2, Math.max(1, missing - 1)], false),
       explain: `${missingSeg}² = ${c}² − ${known}² = ${c * c} − ${known * known} = <strong>${missing * missing}</strong>.<br>Donc ${missingSeg} = √${missing * missing} = <strong>${missing}</strong>.`
     };
   }
@@ -248,15 +257,37 @@ const MathGen = (() => {
 
   const fmtSigned = (n) => (n < 0 ? `(${n})` : `${n}`);
 
-  function generateRelatifs(diff) {
+  function generateRelatifs(level) {
     const story = pick(BERSERK_STORIES);
     const roll = Math.random();
+    const diff = level <= 3 ? 1 : level <= 6 ? 2 : 3;
 
-    // Diff 1 : additions, soustractions, multiplications simples
-    // Diff 2 : + divisions + petites priorités
-    // Diff 3 : priorités + parenthèses + doubles produits
+    // Paliers 8 à 10 : Expressions complexes à 2 étages (parenthèses + produit + quotient)
+    if (level >= 8 && roll < 0.50) {
+      const a = randInt(-6, 5);
+      const b = randInt(-6, 6) || -3;
+      const c = pick([-4, -3, -2, 3, 4]);
+      const d = pick([-6, -4, -3, 3, 4]);
+      const q = pick([-5, -4, -3, -2, 2, 3, 4]);
+      const div = d * q;
+      const part1 = (a + b) * c;
+      const ans = part1 + q;
+      const expr = `(${a} ${b >= 0 ? '+ ' + b : '− ' + Math.abs(b)}) × ${fmtSigned(c)} + ${fmtSigned(div)} ÷ ${fmtSigned(d)}`;
+      return {
+        topic: 'relatifs',
+        category: `⚔️ Relatifs • Défi Expert (Palier ${level})`,
+        story,
+        prompt: `Calcule cette grande expression étape par étape :`,
+        visualHtml: `<div class="math-display" style="font-size:clamp(1.2rem,3vw,1.8rem);">${expr}</div>`,
+        hint: `Sépare en 2 blocs : 1) Calcule (${a} ${b >= 0 ? '+' : '−'} ${Math.abs(b)}) × ${fmtSigned(c)}. 2) Calcule ${fmtSigned(div)} ÷ ${fmtSigned(d)}. 3) Additionne les deux !`,
+        answer: fmtNum(ans),
+        numericAnswer: ans,
+        choices: makeNumericChoices(ans, [-ans, part1 - q, ans + 4, ans - 3], true),
+        explain: `1) (${a + b}) × ${fmtSigned(c)} = <strong>${part1}</strong>.<br>2) ${fmtSigned(div)} ÷ ${fmtSigned(d)} = <strong>${q}</strong>.<br>3) ${part1} + ${fmtSigned(q)} = <strong>${ans}</strong>.`
+      };
+    }
 
-    if (diff === 3 && roll < 0.55) {
+    if (level >= 6 && roll < 0.60) {
       // Priorités opératoires niveau Classe S
       const subtype = randInt(1, 3);
       if (subtype === 1) {
@@ -437,12 +468,43 @@ const MathGen = (() => {
     `;
   }
 
-  function generateStats(diff) {
+  function generateStats(level) {
     const roll = Math.random();
+    const diff = level <= 3 ? 1 : level <= 6 ? 2 : 3;
     const unit = pick(['PV', 'PC', 'ATQ', 'SPD']);
 
-    // 1) Moyenne pondérée / Tableau d'effectifs (Diff 2 & 3)
-    if (diff >= 2 && roll < 0.28) {
+    // Paliers 8 à 10 : Problème inverse complexe (trouver la valeur manquante pour atteindre une moyenne cible !)
+    if (level >= 8 && roll < 0.42) {
+      const targetMean = randInt(14, 24);
+      const count = 4;
+      const totalNeeded = targetMean * count;
+      const v1 = targetMean + randInt(-5, 4);
+      const v2 = targetMean + randInt(-4, 5);
+      const v3 = targetMean + randInt(-4, 3);
+      const missing = totalNeeded - (v1 + v2 + v3);
+      const team = shuffle(POKEMON_POOL).slice(0, 4);
+      const items = [
+        { ...team[0], val: v1 },
+        { ...team[1], val: v2 },
+        { ...team[2], val: v3 },
+        { ...team[3], val: '?' }
+      ];
+      return {
+        topic: 'stats',
+        category: `⚡ Stats • Problème Moyenne (Palier ${level})`,
+        story: '🏆 Problème de Ligue Pokémon ! Il manque la stat du 4ᵉ Pokémon de ton équipe.',
+        prompt: `Tu veux que ton équipe de 4 Pokémon ait exactement ${targetMean} ${unit} de MOYENNE. Quelle doit être la valeur du 4ᵉ Pokémon ?`,
+        visualHtml: renderPokeCards(items, unit),
+        hint: `Pour avoir ${targetMean} de moyenne sur 4 Pokémon, la somme totale doit être <strong>${targetMean} × 4 = ${totalNeeded}</strong> !`,
+        answer: fmtNum(missing),
+        numericAnswer: missing,
+        choices: makeNumericChoices(missing, [targetMean, missing + 2, missing - 3, v1 + v2 + v3], false),
+        explain: `Somme totale voulue : ${targetMean} × 4 = <strong>${totalNeeded}</strong>.<br>Somme des 3 premiers : ${v1} + ${v2} + ${v3} = ${v1 + v2 + v3}.<br>Valeur manquante : ${totalNeeded} − ${v1 + v2 + v3} = <strong>${missing}</strong>.`
+      };
+    }
+
+    // 1) Moyenne pondérée / Tableau d'effectifs (dès Palier 5)
+    if (level >= 5 && roll < 0.35) {
       // Choisir 3 valeurs et effectifs dont la somme des effectifs = 10 ou 5 pour tomber juste !
       const totalEff = pick([5, 10]);
       let effs;
@@ -667,9 +729,60 @@ const MathGen = (() => {
     return shuffle([...set]);
   }
 
-  function generateFractions(diff) {
+  function generateFractions(level) {
     const story = pick(SMASH_STORIES);
     const roll = Math.random();
+    const diff = level <= 3 ? 1 : level <= 6 ? 2 : 3;
+
+    // Paliers 8 à 10 : Problèmes de partage OU priorités opératoires sur les fractions !
+    if (level >= 8 && roll < 0.48) {
+      if (Math.random() < 0.5) {
+        // Problème de reste (1 - a/b - c/d)
+        const combos = [
+          [1, 3, 1, 4],
+          [1, 2, 1, 5],
+          [1, 3, 1, 6],
+          [2, 5, 1, 4],
+          [1, 4, 2, 5]
+        ];
+        const [n1, d1, n2, d2] = pick(combos);
+        const cd = (d1 * d2) / gcd(d1, d2);
+        const taken = n1 * (cd / d1) + n2 * (cd / d2);
+        const rem = cd - taken;
+        const [an, ad] = simplifyFrac(rem, cd);
+        const ans = fmtFracText(an, ad);
+        return {
+          topic: 'fractions',
+          category: `💥 Fractions • Problème (Palier ${level})`,
+          story: '💥 Butin Smash Bros ! Deux combattants se partagent un coffre d’objets.',
+          prompt: `Mario prend ${n1}/${d1} du coffre et Kirby prend ${n2}/${d2}. Quelle FRACTION du coffre reste-t-il ?`,
+          visualHtml: `<div class="math-display frac-display">1 <span class="frac-op">−</span> ${fracHTML(n1, d1)} <span class="frac-op">−</span> ${fracHTML(n2, d2)}</div>`,
+          hint: `Mets tout sur le dénominateur commun <strong>${cd}</strong> (rappel : 1 = ${cd}/${cd}), puis soustrais les deux parts !`,
+          answer: ans,
+          choices: makeFracChoices(an, ad, [[taken, cd], [an + 1, ad], [1, cd]]),
+          explain: `Parts prises sur ${cd} : ${n1 * (cd / d1)}/${cd} + ${n2 * (cd / d2)}/${cd} = ${taken}/${cd}.<br>Il reste : ${cd}/${cd} − ${taken}/${cd} = ${rem}/${cd} → <strong>${ans}</strong>.`
+        };
+      }
+      // Priorités : a/b + c/d × e/f
+      const [n1, d1] = pick([[1, 2], [1, 3], [1, 4], [2, 3]]);
+      const [n2, d2] = pick([[2, 3], [3, 4], [2, 5], [3, 5]]);
+      const [n3, d3] = pick([[1, 2], [3, 4], [2, 3], [5, 6]]);
+      const [pn, pd] = simplifyFrac(n2 * n3, d2 * d3);
+      const cd = (d1 * pd) / gcd(d1, pd);
+      const [an, ad] = simplifyFrac(n1 * (cd / d1) + pn * (cd / pd), cd);
+      const ans = fmtFracText(an, ad);
+      return {
+        topic: 'fractions',
+        category: `💥 Fractions • Priorités (Palier ${level})`,
+        story,
+        prompt: `Attention à la priorité de la multiplication ! Calcule :`,
+        visualHtml: `<div class="math-display frac-display">${fracHTML(n1, d1)} <span class="frac-op">+</span> ${fracHTML(n2, d2)} <span class="frac-op">×</span> ${fracHTML(n3, d3)}</div>`,
+        hint: `Fais d’abord la multiplication ${n2}/${d2} × ${n3}/${d3} (= ${pn}/${pd}), puis additionne avec ${n1}/${d1} !`,
+        answer: ans,
+        choices: makeFracChoices(an, ad, [[pn, pd], [an + 1, ad], [an, ad + 1]]),
+        explain: `1) Produit : ${n2}/${d2} × ${n3}/${d3} = <strong>${pn}/${pd}</strong>.<br>2) Addition : ${n1}/${d1} + ${pn}/${pd} = <strong>${ans}</strong>.`
+      };
+    }
 
     // 1) Simplification de fraction (20%)
     if (roll < 0.20) {
@@ -792,22 +905,194 @@ const MathGen = (() => {
     };
   }
 
+  // ==================== 5. NOMBRES RATIONNELS 4ÈME (DRAGON BALL) ====================
+  const DBZ_STORIES = [
+    '🐉 Entraînement dans la Salle de l’Esprit et du Temps ! Dompte les nombres rationnels !',
+    '⚡ Freezer concentre son rayon mortel : maîtrise les fractions négatives !',
+    '🔥 Cell Parfait teste ton niveau : ne te trompe pas de signe sur ce rationnel !',
+    '💥 Kid Buu détruit tout sur son passage : un calcul rationnel parfait pour le stopper !'
+  ];
+
+  function generateRationnels(level) {
+    const story = pick(DBZ_STORIES);
+    const roll = Math.random();
+
+    // Paliers 9–10 : Enchaînements complexes de rationnels relatifs (priorités + négatifs)
+    if (level >= 9 && roll < 0.50) {
+      const n1 = pick([-1, -2, 1, 2]);
+      const d1 = pick([2, 3, 4]);
+      const n2 = pick([-2, -3, 2, 3]);
+      const d2 = pick([3, 4, 5]);
+      const n3 = pick([-3, -2, 2, 4]);
+      const d3 = pick([3, 4, 5]);
+      const [pn, pd] = simplifyFrac(n2 * n3, d2 * d3);
+      const cd = (d1 * pd) / gcd(d1, pd);
+      const [an, ad] = simplifyFrac(n1 * (cd / d1) + pn * (cd / pd), cd);
+      const ans = fmtFracText(an, ad);
+
+      return {
+        topic: 'rationnels',
+        category: `🐉 Rationnels • Priorités (Palier ${level})`,
+        story,
+        prompt: `Calcule cette expression de nombres rationnels (résultat simplifié) :`,
+        visualHtml: `<div class="math-display frac-display">${fracHTML(n1, d1)} <span class="frac-op">+</span> (${fracHTML(n2, d2)}) <span class="frac-op">×</span> (${fracHTML(n3, d3)})</div>`,
+        hint: `1) Multiplie d’abord (${n2}/${d2}) × (${n3}/${d3}) avec la règle des signes. 2) Mets au même dénominateur avec ${n1}/${d1} !`,
+        answer: ans,
+        choices: makeFracChoices(an, ad, [[-an, ad], [pn, pd], [an + 1, ad]]),
+        explain: `1) Produit : (${n2}/${d2}) × (${n3}/${d3}) = <strong>${fmtFracText(pn, pd)}</strong>.<br>2) Somme : ${n1}/${d1} + (${fmtFracText(pn, pd)}) = <strong>${ans}</strong>.`
+      };
+    }
+
+    // Paliers 1–3 : Signe et simplification de rationnels négatifs OU conversion décimal <-> fraction
+    if (level <= 3 && roll < 0.55) {
+      if (Math.random() < 0.5) {
+        const [bn, bd] = pick([[1, 2], [2, 3], [3, 4], [2, 5], [3, 5], [5, 6]]);
+        const mult = pick([2, 3, 4]);
+        const bothNeg = Math.random() < 0.5;
+        const n = bothNeg ? -bn * mult : (Math.random() < 0.5 ? -bn * mult : bn * mult);
+        const d = bothNeg ? -bd * mult : (n < 0 ? bd * mult : -bd * mult);
+        const [an, ad] = simplifyFrac(n, d);
+        const ans = fmtFracText(an, ad);
+
+        return {
+          topic: 'rationnels',
+          category: `🐉 Rationnels • Signes (Palier ${level})`,
+          story,
+          prompt: `Simplifie ce nombre rationnel (attention aux signes !) :`,
+          visualHtml: `<div class="math-display frac-display">${fracHTML(n, d)}</div>`,
+          hint: bothNeg
+            ? `Deux signes (−) en haut et en bas donnent un résultat <strong>positif (+)</strong> !`
+            : `Un seul signe (−) donne un rationnel <strong>négatif (−)</strong>. Simplifie ensuite par ${mult}.`,
+          answer: ans,
+          choices: makeFracChoices(an, ad, [[-an, ad], [an + 1, ad], [an, ad + 1]]),
+          explain: `${bothNeg ? '(−) ÷ (−) = (+).' : 'Signes contraires → résultat (−).'}<br>Simplifié par ${mult} → <strong>${ans}</strong>.`
+        };
+      }
+      // Décimal négatif -> fraction simplifiée
+      const decList = [
+        { dec: '-0,5', n: -1, d: 2 },
+        { dec: '-0,25', n: -1, d: 4 },
+        { dec: '-0,75', n: -3, d: 4 },
+        { dec: '-1,5', n: -3, d: 2 },
+        { dec: '-0,2', n: -1, d: 5 },
+        { dec: '-0,4', n: -2, d: 5 }
+      ];
+      const item = pick(decList);
+      const ans = fmtFracText(item.n, item.d);
+      return {
+        topic: 'rationnels',
+        category: `🐉 Rationnels • Décimal → Fraction (Palier ${level})`,
+        story,
+        prompt: `Écris ce nombre décimal sous forme de fraction irréductible :`,
+        visualHtml: `<div class="math-display">${item.dec}</div>`,
+        hint: `Transforme d’abord en dixièmes ou centièmes (ex: −0,5 = −5/10), puis simplifie !`,
+        answer: ans,
+        choices: makeFracChoices(item.n, item.d, [[-item.n, item.d], [item.n - 1, item.d], [item.n, item.d + 1]]),
+        explain: `${item.dec} = <strong>${ans}</strong>.`
+      };
+    }
+
+    // Comparaison de rationnels négatifs (Paliers 2 à 6)
+    if (level >= 2 && level <= 6 && roll < 0.35) {
+      const pairs = [
+        [-2, 3, -5, 6],
+        [-1, 2, -3, 4],
+        [-3, 4, -5, 8],
+        [-2, 5, -3, 10],
+        [-1, 3, -4, 9]
+      ];
+      const [n1, d1, n2, d2] = pick(pairs);
+      const v1 = n1 / d1;
+      const v2 = n2 / d2;
+      const biggest = v1 > v2 ? `${n1}/${d1}` : `${n2}/${d2}`;
+      const cd = (d1 * d2) / gcd(d1, d2);
+
+      return {
+        topic: 'rationnels',
+        category: `🐉 Rationnels • Comparaison (Palier ${level})`,
+        story,
+        prompt: `Quel est le PLUS GRAND de ces deux nombres rationnels négatifs ?`,
+        visualHtml: `<div class="math-display frac-display">${fracHTML(n1, d1)} <span class="frac-op">ou</span> ${fracHTML(n2, d2)}</div>`,
+        hint: `Mets les deux fractions sur <strong>${cd}</strong> : chez les négatifs, le plus grand est celui le plus proche de 0 !`,
+        answer: biggest,
+        choices: [`${n1}/${d1}`, `${n2}/${d2}`],
+        forceQcm: true,
+        explain: `Sur ${cd} : ${n1}/${d1} = <strong>${n1 * (cd / d1)}/${cd}</strong> et ${n2}/${d2} = <strong>${n2 * (cd / d2)}/${cd}</strong>.<br>Comme ${Math.max(n1 * (cd / d1), n2 * (cd / d2))} > ${Math.min(n1 * (cd / d1), n2 * (cd / d2))}, le plus grand est <strong>${biggest}</strong> !`
+      };
+    }
+
+    // Produit ou quotient de rationnels négatifs (dès Palier 5)
+    if (level >= 5 && roll < 0.72) {
+      const isDiv = Math.random() < 0.45;
+      const n1 = pick([-5, -4, -3, -2, -1, 2, 3, 4]);
+      const d1 = pick([2, 3, 4, 5, 6]);
+      const n2 = pick([-5, -4, -3, -2, 2, 3, 4]);
+      const d2 = pick([2, 3, 4, 5, 6]);
+      const fn1 = n1 > 0 && n2 > 0 ? -n1 : n1;
+      const [an, ad] = isDiv ? simplifyFrac(fn1 * d2, d1 * n2) : simplifyFrac(fn1 * n2, d1 * d2);
+      const ans = fmtFracText(an, ad);
+
+      return {
+        topic: 'rationnels',
+        category: isDiv ? `🐉 Rationnels • Division (Palier ${level})` : `🐉 Rationnels • Produit (Palier ${level})`,
+        story,
+        prompt: `Calcule en appliquant la règle des signes (résultat simplifié) :`,
+        visualHtml: `<div class="math-display frac-display">(${fracHTML(fn1, d1)}) <span class="frac-op">${isDiv ? '÷' : '×'}</span> (${fracHTML(n2, d2)})</div>`,
+        hint: isDiv
+          ? `Multiplie (${fn1}/${d1}) par l’inverse (${d2}/${n2}) et applique la règle des signes !`
+          : `Mêmes signes = (+), signes contraires = (−). Puis haut × haut et bas × bas !`,
+        answer: ans,
+        choices: makeFracChoices(an, ad, [[-an, ad], [an + 1, ad], [fn1 * n2, d1 * d2]]),
+        explain: isDiv
+          ? `(${fn1}/${d1}) × (${d2}/${n2}) = ${fn1 * d2}/${d1 * n2} → <strong>${ans}</strong>.`
+          : `(${fn1} × ${n2}) / (${d1} × ${d2}) = ${fn1 * n2}/${d1 * d2} → <strong>${ans}</strong>.`
+      };
+    }
+
+    // Somme / Différence de rationnels relatifs
+    const isSub = Math.random() < 0.5;
+    const pairs = level <= 4 ? [[2, 4], [3, 6], [2, 6], [4, 4], [5, 5]] : [[2, 3], [3, 4], [2, 5], [3, 5], [4, 6]];
+    const [d1, d2] = pick(pairs);
+    const n1 = pick([-5, -4, -3, -2, -1, 1, 2, 3]);
+    const n2 = pick([-4, -3, -2, -1, 1, 2, 3]);
+    const fn1 = n1 > 0 && n2 > 0 ? -n1 : n1;
+    const cd = (d1 * d2) / gcd(d1, d2);
+    const rawNum = isSub ? fn1 * (cd / d1) - n2 * (cd / d2) : fn1 * (cd / d1) + n2 * (cd / d2);
+    const [an, ad] = simplifyFrac(rawNum, cd);
+    const ans = fmtFracText(an, ad);
+
+    return {
+      topic: 'rationnels',
+      category: isSub ? `🐉 Rationnels • Différence (Palier ${level})` : `🐉 Rationnels • Somme (Palier ${level})`,
+      story,
+      prompt: `Calcule ce nombre rationnel (résultat simplifié) :`,
+      visualHtml: `<div class="math-display frac-display">${fracHTML(fn1, d1)} <span class="frac-op">${isSub ? '−' : '+'}</span> (${fracHTML(n2, d2)})</div>`,
+      hint: `Mets sur le dénominateur commun <strong>${cd}</strong>, puis calcule le numérateur avec les règles des relatifs !`,
+      answer: ans,
+      choices: makeFracChoices(an, ad, [[-an, ad], [an + 1, ad], [an - 1, ad]]),
+      explain: `Sur ${cd} : ${fn1 * (cd / d1)}/${cd} ${isSub ? '−' : '+'} (${n2 * (cd / d2)}/${cd}) = ${rawNum}/${cd} → <strong>${ans}</strong>.`
+    };
+  }
+
   // ==================== API PUBLIQUE ====================
-  function generateQuest(world, diff, count = 8) {
+  function generateQuest(world, level = 1, count = 8) {
+    const lvl = Math.max(1, Math.min(10, Number(level) || 1));
     const list = [];
     for (let i = 0; i < count; i++) {
-      if (world === 'pythagore') list.push(generatePythagore(diff));
-      else if (world === 'relatifs') list.push(generateRelatifs(diff));
-      else if (world === 'stats') list.push(generateStats(diff));
-      else if (world === 'fractions') list.push(generateFractions(diff));
+      if (world === 'pythagore') list.push(generatePythagore(lvl));
+      else if (world === 'relatifs') list.push(generateRelatifs(lvl));
+      else if (world === 'stats') list.push(generateStats(lvl));
+      else if (world === 'fractions') list.push(generateFractions(lvl));
+      else if (world === 'rationnels') list.push(generateRationnels(lvl));
       else {
-        // Boss Rush One Punch Man : alterne les 4 chapitres équitablement !
-        const slot = i % 4;
+        // Boss Rush One Punch Man : alterne les 5 chapitres !
+        const slot = i % 5;
         const q =
-          slot === 0 ? generatePythagore(diff)
-          : slot === 1 ? generateRelatifs(diff)
-          : slot === 2 ? generateStats(diff)
-          : generateFractions(diff);
+          slot === 0 ? generatePythagore(lvl)
+          : slot === 1 ? generateRelatifs(lvl)
+          : slot === 2 ? generateStats(lvl)
+          : slot === 3 ? generateFractions(lvl)
+          : generateRationnels(lvl);
         q.story = pick([
           '👊 Niveau de menace DÉMON détecté ! Prépare ton coup !',
           '⚡ Genos analyse la cible : il te faut un calcul parfait !',

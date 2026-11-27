@@ -817,7 +817,42 @@ button, .world-card {
 .theme-berserk   { --card-accent: var(--berserk-red); }
 .theme-pokemon   { --card-accent: var(--poke-yellow); }
 .theme-smash     { --card-accent: #38bdf8; }
+.theme-dbz       { --card-accent: #c084fc; }
 .theme-opm       { --card-accent: var(--opm-orange); }
+
+.auto-diff-banner {
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 0.82rem;
+  color: #bae6fd;
+  line-height: 1.35;
+}
+
+.world-lvl-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.world-lvl-pill {
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.world-lvl-track {
+  flex: 1;
+  height: 7px;
+  margin: 0;
+}
+
+.world-lvl-fill {
+  background: var(--card-accent, #38bdf8);
+}
 
 .world-card-top {
   display: flex;

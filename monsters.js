@@ -197,6 +197,43 @@ const BossArt = (() => {
         <ellipse cx="50" cy="54" rx="16" ry="11" fill="#ffffff" stroke="#0f172a" stroke-width="2.5"/>
         <circle cx="50" cy="54" r="7" fill="#38bdf8"/>
         <circle cx="50" cy="54" r="3" fill="#0f172a"/>
+      </svg>`,
+
+    freezer: `
+      <svg viewBox="0 0 100 100" role="img" aria-label="Freezer Forme Finale">
+        <circle cx="50" cy="50" r="46" fill="#a855f7" opacity="0.28"/>
+        <ellipse cx="50" cy="52" rx="28" ry="34" fill="#f8fafc" stroke="#9333ea" stroke-width="3"/>
+        <ellipse cx="50" cy="30" rx="16" ry="11" fill="#7e22ce"/>
+        <polygon points="30,48 46,54 32,57" fill="#ef4444"/>
+        <polygon points="70,48 54,54 68,57" fill="#ef4444"/>
+        <line x1="34" y1="60" x2="34" y2="72" stroke="#9333ea" stroke-width="2"/>
+        <line x1="66" y1="60" x2="66" y2="72" stroke="#9333ea" stroke-width="2"/>
+        <path d="M40,72 Q50,68 60,72" fill="none" stroke="#581c87" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>`,
+
+    cell: `
+      <svg viewBox="0 0 100 100" role="img" aria-label="Cell Parfait">
+        <circle cx="50" cy="50" r="46" fill="#22c55e" opacity="0.26"/>
+        <!-- Crête noire/verte -->
+        <polygon points="22,42 16,12 40,26 50,20 60,26 84,12 78,42" fill="#0f172a" stroke="#22c55e" stroke-width="2.5"/>
+        <path d="M28,42 Q50,32 72,42 L68,78 Q50,88 32,78 Z" fill="#e2e8f0" stroke="#16a34a" stroke-width="3"/>
+        <path d="M28,42 L34,74 M72,42 L66,74" stroke="#7e22ce" stroke-width="3"/>
+        <polygon points="34,50 47,54 35,58" fill="#f43f5e"/>
+        <polygon points="66,50 53,54 65,58" fill="#f43f5e"/>
+        <path d="M41,70 Q50,74 59,69" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+      </svg>`,
+
+    buu: `
+      <svg viewBox="0 0 100 100" role="img" aria-label="Kid Buu">
+        <circle cx="50" cy="50" r="46" fill="#ec4899" opacity="0.32"/>
+        <!-- Antenne Buu -->
+        <path d="M50,24 Q68,4 82,18 Q68,20 56,30 Z" fill="#f472b6" stroke="#831843" stroke-width="2.5"/>
+        <circle cx="50" cy="56" r="30" fill="#f472b6" stroke="#db2777" stroke-width="3"/>
+        <polygon points="30,48 46,54 32,58" fill="#0f172a"/>
+        <circle cx="38" cy="53" r="3" fill="#ef4444"/>
+        <polygon points="70,48 54,54 68,58" fill="#0f172a"/>
+        <circle cx="62" cy="53" r="3" fill="#ef4444"/>
+        <path d="M34,68 Q50,82 66,68 Q50,72 34,68 Z" fill="#0f172a"/>
       </svg>`
   };
 

@@ -258,6 +258,60 @@ const MathLessons = (() => {
           }
         }
       ]
+    },
+
+    rationnels: {
+      id: 'rationnels',
+      title: '🐉 Dojo des Nombres Rationnels (Dragon Ball)',
+      subtitle: 'Maîtriser les fractions négatives, signes, comparaisons et priorités',
+      steps: [
+        {
+          badge: 'ÉTAPE 1 / 4 • QU’EST-CE QU’UN RATIONNEL ?',
+          title: 'Un rationnel = un quotient de deux entiers (positif ou négatif)',
+          body: `
+            <p>Un <strong>nombre rationnel</strong> peut s’écrire sous forme de fraction <code>a / b</code> (avec <code>b ≠ 0</code>). Il peut être <strong>positif ou négatif</strong> !</p>
+            <div class="lesson-big-formula">−(3 / 4)  =  (−3) / 4  =  3 / (−4)</div>
+            <div class="lesson-rule">🐉 <strong>Règle des signes :</strong> Si le haut ET le bas sont négatifs, les deux moins s’annulent → <code>(−4) / (−6) = +4/6 = 2/3</code> !</div>
+          `
+        },
+        {
+          badge: 'ÉTAPE 2 / 4 • COMPARER & DÉCIMAUX',
+          title: 'Passer d’un décimal à une fraction (et comparer)',
+          body: `
+            <ul class="lesson-steps-list">
+              <li><strong>Décimal → Fraction :</strong> <code>−0,5 = −1/2</code> • <code>−0,25 = −1/4</code> • <code>0,75 = 3/4</code>.</li>
+              <li><strong>Comparer deux rationnels :</strong> mets-les au <strong>même dénominateur positif</strong>, puis compare les numérateurs !</li>
+            </ul>
+            <div class="lesson-rule">⚠️ <strong>Attention aux négatifs :</strong> <code>−2/3 = −4/6</code> est <strong>PLUS GRAND</strong> que <code>−5/6</code> (car −4 &gt; −5 !).</div>
+          `
+        },
+        {
+          badge: 'ÉTAPE 3 / 4 • OPÉRATIONS AVEC DES SIGNES',
+          title: 'Addition, Soustraction, Multiplication & Division de rationnels',
+          body: `
+            <ol class="lesson-steps-list">
+              <li><strong>+ et − :</strong> même dénominateur, puis règle des relatifs au numérateur.<br>Ex : <code>−1/2 + 3/4 = −2/4 + 3/4 = 1/4</code>.</li>
+              <li><strong>× et ÷ :</strong> règle des signes (mêmes signes = <code>+</code>, contraires = <code>−</code>), et pour <code>÷</code> on multiplie par l’<strong>inverse</strong> !</li>
+            </ol>
+            <div class="lesson-big-formula">(−2/3) × (−3/5)  =  +6/15  =  2/5</div>
+          `
+        },
+        {
+          badge: 'ÉTAPE 4 / 4 • PRIORITÉS & MINI-TEST',
+          title: 'Enchaîner plusieurs opérations sur les rationnels',
+          body: `
+            <p>Toujours le même ordre sacré : <strong>1. Parenthèses</strong> → <strong>2. × et ÷</strong> → <strong>3. + et −</strong>.</p>
+            <p>Ex : <code>1/2 + (−2/3) × (3/4)</code> → d’abord <code>(−2/3) × (3/4) = −1/2</code> → puis <code>1/2 + (−1/2) = 0</code> !</p>
+          `,
+          check: {
+            question: 'Mini-test : Simplifie le nombre rationnel (−6) / (−8) :',
+            options: ['3/4 (les deux signes − donnent +)', '−3/4', '−6/8'],
+            correctIndex: 0,
+            okMsg: 'Kamehameha ! (−) ÷ (−) = (+), et 6/8 simplifié par 2 donne 3/4 !',
+            retryMsg: 'Rappel : deux signes négatifs s’annulent ! (−6)/(−8) = +6/8 = 3/4.'
+          }
+        }
+      ]
     }
   };
 

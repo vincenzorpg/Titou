@@ -84,7 +84,9 @@
     { id: 'rel_master',   icon: '⚔️', title: 'Dragon Slayer',       desc: 'Obtenir 3★ dans l’Arène des Relatifs.' },
     { id: 'stat_master',  icon: '⚡', title: 'Maître Pokédex',      desc: 'Obtenir 3★ au Labo des Statistiques.' },
     { id: 'frac_master',  icon: '💥', title: 'Final Smash Maths',   desc: 'Obtenir 3★ dans l’Arène des Fractions.' },
+    { id: 'rat_master',   icon: '🐉', title: 'Maître Rationnel',    desc: 'Obtenir 3★ dans la Salle des Rationnels.' },
     { id: 'boss_master',  icon: '👊', title: 'One Punch Math',      desc: 'Vaincre le Boss Rush Classe S (≥ 6/8).' },
+    { id: 'palier_10',    icon: '🏔️', title: 'Sommet Palier 10',    desc: 'Atteindre le Palier 10 dans un monde.' },
     { id: 'combo_5',      icon: '🔥', title: 'Série Infernale',     desc: 'Atteindre un combo de 5 bonnes réponses.' },
     { id: 'combo_8',      icon: '☄️', title: 'Combo Divin (8/8)',   desc: 'Enchaîner 8 bonnes réponses d’affilée.' },
     { id: 'perfect',      icon: '💎', title: 'Sans-Faute Absolu',   desc: 'Faire 8/8 sur n’importe quelle quête.' },
@@ -135,6 +137,14 @@
         { name: 'Créa-Main (Master Hand)', art: 'masterhand' }
       ]
     },
+    rationnels: {
+      label: '🐉 Dragon Ball : Rationnels',
+      enemies: [
+        { name: 'Freezer Forme Finale', art: 'freezer' },
+        { name: 'Cell Parfait', art: 'cell' },
+        { name: 'Kid Buu Ultime', art: 'buu' }
+      ]
+    },
     boss: {
       label: '🥊 Boss Rush : Classe S',
       enemies: [
@@ -159,6 +169,12 @@
 
   const todayKey = () => new Date().toISOString().slice(0, 10);
 
+  const ALL_WORLDS = ['pythagore', 'relatifs', 'stats', 'fractions', 'rationnels', 'boss'];
+
+  function defaultWorldLevels() {
+    return { pythagore: 1, relatifs: 1, stats: 1, fractions: 1, rationnels: 1, boss: 1 };
+  }
+
   function defaultProfile(name = 'Titou', id = null) {
     return {
       id: id || slugifyId(name),
@@ -166,7 +182,8 @@
       xp: 0,
       gems: 0,
       bestCombo: 0,
-      stars: { pythagore: 0, relatifs: 0, stats: 0, fractions: 0, boss: 0 },
+      stars: { pythagore: 0, relatifs: 0, stats: 0, fractions: 0, rationnels: 0, boss: 0 },
+      worldLevels: defaultWorldLevels(),
       badges: [],
       sound: true,
       studySeconds: 0,
@@ -180,15 +197,15 @@
     };
   }
 
-  function calcSwitchReward(score, diff) {
+  function calcSwitchReward(score, worldLvl) {
     if (score < 5) return 0;
     let mins = 1; // 5 / 8
     if (score === 6) mins = 2;
     else if (score === 7) mins = 3;
     else if (score >= 8) mins = 4;
     if (score >= 6) {
-      if (diff === 2) mins += 1;
-      else if (diff >= 3) mins += score >= 8 ? 2 : 1;
+      if (worldLvl >= 4 && worldLvl <= 6) mins += 1;
+      else if (worldLvl >= 7) mins += score >= 8 ? 2 : 1;
     }
     return mins;
   }
@@ -207,6 +224,7 @@
       name: (raw?.name || fallbackName).trim() || fallbackName,
       id: raw?.id || slugifyId(raw?.name || fallbackName),
       stars: { ...base.stars, ...(raw?.stars || {}) },
+      worldLevels: { ...base.worldLevels, ...(raw?.worldLevels || {}) },
       badges: Array.isArray(raw?.badges) ? raw.badges : []
     };
   }
@@ -295,8 +313,10 @@
     if (!incomingP || typeof incomingP !== 'object') return localP;
     const base = defaultProfile(localP.name || incomingP.name || 'Titou', localP.id);
     const mergedStars = { ...base.stars };
-    for (const k of Object.keys(mergedStars)) {
+    const mergedWorldLevels = { ...base.worldLevels };
+    for (const k of ALL_WORLDS) {
       mergedStars[k] = Math.max(localP.stars?.[k] || 0, incomingP.stars?.[k] || 0);
+      mergedWorldLevels[k] = Math.min(10, Math.max(localP.worldLevels?.[k] || 1, incomingP.worldLevels?.[k] || 1));
     }
     const badgesSet = new Set([
       ...(Array.isArray(localP.badges) ? localP.badges : []),
@@ -311,6 +331,7 @@
       gems: Math.max(Number(localP.gems) || 0, Number(incomingP.gems) || 0),
       bestCombo: Math.max(Number(localP.bestCombo) || 0, Number(incomingP.bestCombo) || 0),
       stars: mergedStars,
+      worldLevels: mergedWorldLevels,
       badges: [...badgesSet],
       sound: localP.sound !== undefined ? localP.sound : true,
       studySeconds: Math.max(Number(localP.studySeconds) || 0, Number(incomingP.studySeconds) || 0),
@@ -515,7 +536,8 @@
           (lProf.studySeconds || 0) > (rProf.studySeconds || 0) ||
           (lProf.switchMinutesEarned || 0) > (rProf.switchMinutesEarned || 0) ||
           (lProf.bonusSwitchMinutes || 0) > (rProf.bonusSwitchMinutes || 0) ||
-          (lProf.switchMinutesUsed || 0) > (rProf.switchMinutesUsed || 0);
+          (lProf.switchMinutesUsed || 0) > (rProf.switchMinutesUsed || 0) ||
+          ALL_WORLDS.some((w) => (lProf.worldLevels?.[w] || 1) > (rProf.worldLevels?.[w] || 1));
         if (needsPush) {
           pushTasks.push(pushProfileToCloud(lProf));
         }
@@ -576,7 +598,6 @@
 
   // ==================== RÉGLAGES & ÉTAT DE PARTIE ====================
   const settings = {
-    diff: 1,
     inputMode: 'qcm', // 'qcm' | 'type'
     timerMode: 'off'  // 'off' | 'on'
   };
@@ -624,11 +645,17 @@
     const badgesName = $('badges-player-name');
     if (badgesName) badgesName.textContent = profile.name;
 
-    // Étoiles sur les cartes du menu
-    ['pythagore', 'relatifs', 'stats', 'fractions', 'boss'].forEach((w) => {
-      const s = profile.stars[w] || 0;
+    // Étoiles et Paliers (1 → 10) sur les cartes du menu
+    ALL_WORLDS.forEach((w) => {
+      const s = profile.stars?.[w] || 0;
       const el = $(`stars-${w}`);
       if (el) el.textContent = '★'.repeat(s) + '☆'.repeat(3 - s);
+
+      const wl = Math.max(1, Math.min(10, profile.worldLevels?.[w] || 1));
+      const lvlEl = $(`wlevel-${w}`);
+      if (lvlEl) lvlEl.textContent = wl >= 10 ? 'Palier 10 / 10 🔥' : `Palier ${wl} / 10`;
+      const fillEl = $(`wfill-${w}`);
+      if (fillEl) fillEl.style.width = `${wl * 10}%`;
     });
   }
 
@@ -737,12 +764,14 @@
     stopTimer();
 
     const meta = WORLD_META[world];
-    const enemy = meta.enemies[Math.min(settings.diff - 1, meta.enemies.length - 1)];
+    const worldLvl = Math.max(1, Math.min(10, profile.worldLevels?.[world] || 1));
+    const enemyIdx = worldLvl <= 3 ? 0 : worldLvl <= 7 ? 1 : 2;
+    const enemy = meta.enemies[Math.min(enemyIdx, meta.enemies.length - 1)];
 
     session = {
       world,
-      diff: settings.diff,
-      questions: MathGen.generateQuest(world, settings.diff, QUEST_LENGTH),
+      worldLvl,
+      questions: MathGen.generateQuest(world, worldLvl, QUEST_LENGTH),
       index: 0,
       results: [], // 'correct' | 'wrong'
       score: 0,
@@ -758,7 +787,7 @@
       meta
     };
 
-    $('game-world-label').textContent = meta.label;
+    $('game-world-label').textContent = `${meta.label} • Palier ${worldLvl}/10`;
     $('enemy-name').textContent = enemy.name;
     $('enemy-sprite').innerHTML = BossArt.get(enemy.art);
     $('enemy-sprite').classList.remove('ko');
@@ -952,10 +981,11 @@
       session.results.push('correct');
 
       const isCrit = session.ultCharge >= 3;
-      const baseXp = 10 + settings.diff * 5;
+      const tier = session.worldLvl <= 3 ? 1 : session.worldLvl <= 7 ? 2 : 3;
+      const baseXp = 10 + tier * 5;
       const comboBonus = Math.min(session.combo * 3, 15);
       const gainedXp = baseXp + comboBonus + (isCrit ? 10 : 0);
-      const gainedGems = 4 + settings.diff * 2 + (isCrit ? 4 : 0);
+      const gainedGems = 4 + tier * 2 + (isCrit ? 4 : 0);
 
       session.xpEarned += gainedXp;
       session.gemsEarned += gainedGems;
@@ -1044,9 +1074,18 @@
     profile.xp += session.xpEarned;
     profile.gems += session.gemsEarned;
     profile.questsCompleted = (profile.questsCompleted || 0) + 1;
-    const switchGained = calcSwitchReward(session.score, session.diff);
+    const switchGained = calcSwitchReward(session.score, session.worldLvl);
     profile.switchMinutesEarned = (profile.switchMinutesEarned || 0) + switchGained;
     if (session.maxCombo > profile.bestCombo) profile.bestCombo = session.maxCombo;
+
+    // Progression progressive automatique (Palier 1 → Palier 10) si score >= 6/8 !
+    let leveledUpWorld = false;
+    if (!profile.worldLevels) profile.worldLevels = defaultWorldLevels();
+    const curWorldLvl = profile.worldLevels[session.world] || 1;
+    if (session.score >= 6 && curWorldLvl < 10) {
+      profile.worldLevels[session.world] = curWorldLvl + 1;
+      leveledUpWorld = true;
+    }
 
     // Calcul des étoiles
     const stars = session.score >= 7 ? 3 : session.score >= 5 ? 2 : session.score >= 3 ? 1 : 0;
@@ -1072,7 +1111,9 @@
     if (session.world === 'relatifs' && stars === 3) unlock('rel_master');
     if (session.world === 'stats' && stars === 3) unlock('stat_master');
     if (session.world === 'fractions' && stars === 3) unlock('frac_master');
+    if (session.world === 'rationnels' && stars === 3) unlock('rat_master');
     if (session.world === 'boss' && session.score >= 6) unlock('boss_master');
+    if (ALL_WORLDS.some((w) => (profile.worldLevels?.[w] || 1) >= 10)) unlock('palier_10');
     if (session.maxCombo >= 5) unlock('combo_5');
     if (session.maxCombo >= QUEST_LENGTH) unlock('combo_8');
     if (session.score === QUEST_LENGTH) unlock('perfect');
@@ -1100,6 +1141,10 @@
           ? '🌌 NIVEAU 100 : SUPER SAIYAN 6 !'
           : `⬆️ NIVEAU ${newInfo.level} ATTEINT !`
       );
+    } else if (leveledUpWorld) {
+      SoundFX.levelUp();
+      triggerSpeedLines();
+      showSlashBanner(`📈 PALIER ${profile.worldLevels[session.world]} / 10 DÉBLOQUÉ !`);
     } else {
       SoundFX.victory();
     }
@@ -1113,12 +1158,13 @@
         : stars >= 2
         ? 'QUÊTE RÉUSSIE !'
         : 'BON ENTRAÎNEMENT !';
-    $('result-subtitle').textContent =
-      stars === 3
-        ? `Même Saitama serait impressionné, ${profile.name} !`
-        : stars === 2
-        ? 'Solide ! Encore un petit effort pour les 3 étoiles.'
-        : 'Tu progresses à chaque essai — jette un œil au Grimoire si besoin !';
+    $('result-subtitle').textContent = leveledUpWorld
+      ? `Bravo ${profile.name} ! Tu débloques le Palier ${profile.worldLevels[session.world]} / 10 (difficulté supérieure) !`
+      : stars === 3
+      ? `Même Saitama serait impressionné, ${profile.name} !`
+      : stars === 2
+      ? 'Solide ! Fais au moins 6/8 pour passer au palier suivant.'
+      : 'Tu progresses à chaque essai — jette un œil au Dojo si besoin !';
 
     $('result-stars').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
     $('res-score').textContent = `${session.score} / ${QUEST_LENGTH}`;
@@ -1275,14 +1321,6 @@
 
   // ==================== ÉVÉNEMENTS ====================
   // Sélecteurs du menu
-  $('diff-selector').addEventListener('click', (e) => {
-    const btn = e.target.closest('.seg-btn');
-    if (!btn) return;
-    SoundFX.click();
-    settings.diff = Number(btn.dataset.diff);
-    $('diff-selector').querySelectorAll('.seg-btn').forEach((b) => b.classList.toggle('active', b === btn));
-  });
-
   $('input-mode-selector').addEventListener('click', (e) => {
     const btn = e.target.closest('.seg-btn');
     if (!btn) return;

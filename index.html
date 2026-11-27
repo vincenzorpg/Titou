@@ -107,15 +107,10 @@
           </div>
         </div>
 
-        <!-- Réglages rapides TDAH-friendly -->
+        <!-- Réglages rapides TDAH-friendly (sans sélecteur de difficulté : progression auto 1 → 10 !) -->
         <div class="quick-settings">
-          <div class="setting-group">
-            <span class="setting-label">Difficulté</span>
-            <div class="segmented" id="diff-selector">
-              <button class="seg-btn active" data-diff="1">🌱 Apprenti</button>
-              <button class="seg-btn" data-diff="2">⚔️ Guerrier</button>
-              <button class="seg-btn" data-diff="3">🔥 Classe S</button>
-            </div>
+          <div class="auto-diff-banner">
+            📈 <strong>Difficulté progressive (Paliers 1 → 10)</strong> : fais <strong>≥ 6/8</strong> pour monter au palier suivant !
           </div>
 
           <div class="setting-row">
@@ -166,6 +161,10 @@
             <li>Côté manquant</li>
             <li>Angle droit ?</li>
           </ul>
+          <div class="world-lvl-row">
+            <span class="world-lvl-pill" id="wlevel-pythagore">Palier 1 / 10</span>
+            <div class="bar-track world-lvl-track"><div class="bar-fill world-lvl-fill" id="wfill-pythagore" style="width:10%"></div></div>
+          </div>
           <button class="play-btn">⛏️ Lancer la Quête</button>
         </article>
 
@@ -193,6 +192,10 @@
             <li>× et ÷</li>
             <li>Priorités</li>
           </ul>
+          <div class="world-lvl-row">
+            <span class="world-lvl-pill" id="wlevel-relatifs">Palier 1 / 10</span>
+            <div class="bar-track world-lvl-track"><div class="bar-fill world-lvl-fill" id="wfill-relatifs" style="width:10%"></div></div>
+          </div>
           <button class="play-btn">⚔️ Dégainer l'Épée</button>
         </article>
 
@@ -221,6 +224,10 @@
             <li>Médiane</li>
             <li>Étendue</li>
           </ul>
+          <div class="world-lvl-row">
+            <span class="world-lvl-pill" id="wlevel-stats">Palier 1 / 10</span>
+            <div class="bar-track world-lvl-track"><div class="bar-fill world-lvl-fill" id="wfill-stats" style="width:10%"></div></div>
+          </div>
           <button class="play-btn">⚡ Analyser l'Équipe</button>
         </article>
 
@@ -248,10 +255,44 @@
             <li>+ / − / ×</li>
             <li>Division ÷</li>
           </ul>
+          <div class="world-lvl-row">
+            <span class="world-lvl-pill" id="wlevel-fractions">Palier 1 / 10</span>
+            <div class="bar-track world-lvl-track"><div class="bar-fill world-lvl-fill" id="wfill-fractions" style="width:10%"></div></div>
+          </div>
           <button class="play-btn">💥 Final Smash !</button>
         </article>
 
-        <!-- Monde 5 : One Punch Man / Boss Rush -->
+        <!-- Monde 5 : Dragon Ball / Nombres Rationnels -->
+        <article class="world-card theme-dbz" data-world="rationnels">
+          <div class="world-card-top">
+            <span class="world-badge">DRAGON BALL</span>
+            <span class="world-stars" id="stars-rationnels">☆☆☆</span>
+          </div>
+          <div class="world-art">
+            <svg viewBox="0 0 120 80" class="art-svg">
+              <!-- Dragon Ball 4 étoiles + fraction négative -->
+              <circle cx="40" cy="40" r="24" fill="#f97316" stroke="#fde047" stroke-width="3"/>
+              <text x="40" y="46" text-anchor="middle" fill="#dc2626" font-size="16" font-weight="900">★★★★</text>
+              <text x="90" y="34" text-anchor="middle" fill="#f87171" font-size="17" font-weight="900">-3</text>
+              <line x1="74" y1="41" x2="106" y2="41" stroke="#f8fafc" stroke-width="3"/>
+              <text x="90" y="61" text-anchor="middle" fill="#c084fc" font-size="17" font-weight="900">4</text>
+            </svg>
+          </div>
+          <h2>La Salle des Rationnels</h2>
+          <p class="world-topic">Fractions négatives, signes, comparaisons &amp; priorités</p>
+          <ul class="world-tags">
+            <li>Signes (−)</li>
+            <li>Comparer</li>
+            <li>Priorités</li>
+          </ul>
+          <div class="world-lvl-row">
+            <span class="world-lvl-pill" id="wlevel-rationnels">Palier 1 / 10</span>
+            <div class="bar-track world-lvl-track"><div class="bar-fill world-lvl-fill" id="wfill-rationnels" style="width:10%"></div></div>
+          </div>
+          <button class="play-btn">🐉 Kamehameha !</button>
+        </article>
+
+        <!-- Monde 6 : One Punch Man / Boss Rush -->
         <article class="world-card theme-opm" data-world="boss">
           <div class="world-card-top">
             <span class="world-badge">ONE PUNCH MAN</span>
@@ -272,6 +313,10 @@
             <li>Relatifs</li>
             <li>Stats</li>
           </ul>
+          <div class="world-lvl-row">
+            <span class="world-lvl-pill" id="wlevel-boss">Palier 1 / 10</span>
+            <div class="bar-track world-lvl-track"><div class="bar-fill world-lvl-fill" id="wfill-boss" style="width:10%"></div></div>
+          </div>
           <button class="play-btn">🥊 Mode Serious Punch</button>
         </article>
       </div>
@@ -446,8 +491,9 @@
       <div class="modal-tabs" id="grimoire-tabs">
         <button class="tab-btn active" data-tab="g-pyth">⛏️ Pythagore</button>
         <button class="tab-btn" data-tab="g-rel">⚔️ Relatifs</button>
-        <button class="tab-btn" data-tab="g-stat">⚡ Statistiques</button>
+        <button class="tab-btn" data-tab="g-stat">⚡ Stats</button>
         <button class="tab-btn" data-tab="g-frac">💥 Fractions</button>
+        <button class="tab-btn" data-tab="g-rat">🐉 Rationnels</button>
       </div>
       <div class="modal-body">
         <!-- Tab Pythagore -->
@@ -545,6 +591,23 @@
             <h3>4. Division (÷) : l'INVERSE !</h3>
             <div class="formula-pill">(a / b) ÷ (c / d) = (a / b) × (d / c)</div>
             <p>Diviser par une fraction, c'est <strong>multiplier par son inverse</strong>.</p>
+          </div>
+        </div>
+
+        <!-- Tab Rationnels -->
+        <div class="tab-panel" id="g-rat">
+          <div class="memo-card">
+            <h3>1. Signe d'un nombre rationnel</h3>
+            <div class="formula-pill">−(a/b) = (−a)/b = a/(−b) &nbsp;•&nbsp; (−a)/(−b) = +(a/b)</div>
+            <p>Deux signes <code>−</code> en haut et en bas s'annulent et donnent <code>+</code> !</p>
+          </div>
+          <div class="memo-card">
+            <h3>2. Comparer des rationnels négatifs</h3>
+            <p>Mets au même dénominateur positif : le plus grand est celui qui est <strong>le plus proche de 0</strong> (ex : <code>−2/3 = −4/6 &gt; −5/6</code>).</p>
+          </div>
+          <div class="memo-card">
+            <h3>3. Opérations &amp; Priorités</h3>
+            <p>Règle des signes identique aux relatifs, <strong>× et ÷</strong> avant <strong>+ et −</strong>, et <code>÷</code> = multiplier par l'inverse !</p>
           </div>
         </div>
       </div>
@@ -727,7 +790,7 @@
             <span>6/8 → <strong>+2m</strong></span>
             <span>7/8 → <strong>+3m</strong></span>
             <span>8/8 → <strong>+4m</strong></span>
-            <span class="bareme-bonus">⚔️ Guerrier +1m • 🔥 Classe S +1/+2m</span>
+            <span class="bareme-bonus">📈 Palier 4–6 +1m • Palier 7–10 +1/+2m</span>
           </div>
           <div class="switch-substats">
             <div>🎯 Quêtes finies : <strong id="reward-quests-done">0</strong></div>
@@ -780,8 +843,9 @@
       <div class="modal-tabs" id="dojo-topic-tabs">
         <button class="tab-btn active" data-course="pythagore">⛏️ Pythagore</button>
         <button class="tab-btn" data-course="relatifs">⚔️ Relatifs</button>
-        <button class="tab-btn" data-course="stats">⚡ Statistiques</button>
+        <button class="tab-btn" data-course="stats">⚡ Stats</button>
         <button class="tab-btn" data-course="fractions">💥 Fractions</button>
+        <button class="tab-btn" data-course="rationnels">🐉 Rationnels</button>
       </div>
 
       <div class="dojo-progress-bar">
