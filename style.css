@@ -141,6 +141,98 @@ button, .world-card {
   padding-right: 8px;
 }
 
+.profile-switch-btn {
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.12s ease;
+}
+
+.profile-switch-btn:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.profiles-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profile-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #0b0f19;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.12s ease;
+}
+
+.profile-row:hover {
+  border-color: var(--accent-2);
+  transform: translateY(-1px);
+}
+
+.profile-row.active {
+  border-color: var(--accent);
+  background: rgba(250, 204, 21, 0.08);
+}
+
+.profile-row-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.profile-row-ico {
+  font-size: 1.7rem;
+}
+
+.profile-row-name {
+  font-weight: 900;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.active-tag {
+  font-size: 0.68rem;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(250, 204, 21, 0.2);
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.profile-row-meta {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.profile-del-btn {
+  background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  border-radius: 8px;
+  padding: 6px 9px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.profile-del-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.create-profile-form h3 {
+  margin-bottom: 10px;
+}
+
 .pill-info {
   display: flex;
   flex-direction: column;

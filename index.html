@@ -29,16 +29,16 @@
     </div>
 
     <div class="hud-stats">
-      <div class="hud-pill rank-pill" id="hud-rank-pill">
+      <button class="hud-pill rank-pill profile-switch-btn" id="hud-rank-pill" title="Changer de compte / Créer un profil">
         <span class="pill-icon" id="hud-avatar">⛏️</span>
         <div class="pill-info">
-          <div class="pill-label" id="hud-rank-name">Villageois</div>
+          <div class="pill-label"><strong id="hud-player-name">Titou</strong> • <span id="hud-rank-name">Villageois</span> ▾</div>
           <div class="xp-bar-mini">
             <div class="xp-fill-mini" id="hud-xp-fill"></div>
           </div>
         </div>
         <span class="lvl-badge">Niv. <span id="hud-level">1</span></span>
-      </div>
+      </button>
 
       <div class="hud-pill" title="Émeraudes gagnées">
         <span class="pill-icon">💎</span>
@@ -77,7 +77,7 @@
       <div class="hero-banner">
         <div class="hero-text">
           <div class="hero-tag">🎮 SESSION COURTE • 8 DÉFIS PAR QUÊTE</div>
-          <h1>Prêt à tout casser, <span class="gradient-text">Titou</span> ?</h1>
+          <h1>Prêt à tout casser, <span class="gradient-text" id="hero-player-name">Titou</span> ?</h1>
           <p class="hero-desc">
             Choisis ton univers, règle ton mode de jeu et enchaîne les combos pour débloquer le rang <strong>Héros de Classe S</strong> !
           </p>
@@ -255,7 +255,7 @@
         <div class="fighter player-side">
           <div class="fighter-icon" id="player-sprite">🦸</div>
           <div class="fighter-info">
-            <div class="fighter-name">Titou</div>
+            <div class="fighter-name" id="battle-player-name">Titou</div>
             <div class="charge-bar-wrap" title="3 bonnes réponses d'affilée = Coup Critique / Serious Punch !">
               <div class="charge-label">⚡ Jauge Ultime</div>
               <div class="bar-track">
@@ -464,7 +464,7 @@
   <div class="modal-backdrop hidden" id="modal-badges" role="dialog" aria-modal="true">
     <div class="modal-box">
       <div class="modal-header">
-        <h2>🏆 Salle des Trophées de Titou</h2>
+        <h2>🏆 Salle des Trophées — <span id="badges-player-name">Titou</span></h2>
         <button class="modal-close" data-close="modal-badges">✕</button>
       </div>
       <div class="modal-body">
@@ -472,6 +472,30 @@
         <div class="reset-zone">
           <button class="btn-danger-ghost" id="btn-reset-save">Réinitialiser la progression</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODALE : COMPTES / PROFILS ==================== -->
+  <div class="modal-backdrop hidden" id="modal-profiles" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>👥 Comptes &amp; Classement</h2>
+        <button class="modal-close" data-close="modal-profiles">✕</button>
+      </div>
+      <div class="modal-body sync-body">
+        <p class="sync-help">
+          Chaque joueur a sa propre sauvegarde (XP, niveau, étoiles, trophées). Clique sur un compte pour jouer avec !
+        </p>
+        <div class="profiles-list" id="profiles-list"></div>
+
+        <form class="memo-card create-profile-form" id="create-profile-form">
+          <h3>➕ Créer un nouveau compte</h3>
+          <div class="sync-inline">
+            <input type="text" id="new-profile-name" class="sync-input" maxlength="18" placeholder="Prénom ou pseudo (ex: Papa, Invité)..." required>
+            <button type="submit" class="btn-primary">Créer</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>

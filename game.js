@@ -1,7 +1,8 @@
 // Moteur principal de MATH QUEST : Édition Titou (4ème)
 
 (() => {
-  const SAVE_KEY = 'mathquest_titou_4e_v1';
+  const LEGACY_SAVE_KEY = 'mathquest_titou_4e_v1';
+  const STORE_KEY = 'mathquest_accounts_v2';
   const QUEST_LENGTH = 8;
 
   // Rangs évolutifs mêlant Minecraft, Pokémon, Berserk & One Punch Man
@@ -65,9 +66,22 @@
     }
   };
 
-  // ==================== ÉTAT & SAUVEGARDE ====================
-  function defaultSave() {
+  // ==================== ÉTAT & MULTI-COMPTES ====================
+  function slugifyId(name) {
+    return (
+      String(name || 'joueur')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '') || 'joueur'
+    );
+  }
+
+  function defaultProfile(name = 'Titou', id = null) {
     return {
+      id: id || slugifyId(name),
+      name,
       xp: 0,
       gems: 0,
       bestCombo: 0,
@@ -77,35 +91,100 @@
     };
   }
 
-  let profile = loadSave();
+  function normalizeProfile(raw, fallbackName = 'Titou') {
+    const base = defaultProfile(raw?.name || fallbackName, raw?.id);
+    return {
+      ...base,
+      ...(raw || {}),
+      name: (raw?.name || fallbackName).trim() || fallbackName,
+      id: raw?.id || slugifyId(raw?.name || fallbackName),
+      stars: { ...base.stars, ...(raw?.stars || {}) },
+      badges: Array.isArray(raw?.badges) ? raw.badges : []
+    };
+  }
 
-  function loadSave() {
+  function loadStore() {
     try {
-      const raw = localStorage.getItem(SAVE_KEY);
-      if (!raw) return defaultSave();
-      const parsed = JSON.parse(raw);
-      return {
-        ...defaultSave(),
-        ...parsed,
-        stars: { ...defaultSave().stars, ...(parsed.stars || {}) },
-        badges: Array.isArray(parsed.badges) ? parsed.badges : []
-      };
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.profiles && Object.keys(parsed.profiles).length > 0) {
+          const profiles = {};
+          for (const [k, v] of Object.entries(parsed.profiles)) {
+            profiles[k] = normalizeProfile({ ...v, id: k }, v?.name || k);
+          }
+          const activeId = profiles[parsed.activeId] ? parsed.activeId : Object.keys(profiles)[0];
+          return { activeId, profiles };
+        }
+      }
+      // Migration automatique d'une sauvegarde Titou v1 si présente
+      const legacyRaw = localStorage.getItem(LEGACY_SAVE_KEY);
+      const titou = legacyRaw
+        ? normalizeProfile({ ...JSON.parse(legacyRaw), id: 'titou', name: 'Titou' }, 'Titou')
+        : defaultProfile('Titou', 'titou');
+      return { activeId: 'titou', profiles: { titou } };
     } catch {
-      return defaultSave();
+      const titou = defaultProfile('Titou', 'titou');
+      return { activeId: 'titou', profiles: { titou } };
     }
   }
 
+  let store = loadStore();
+  let profile = store.profiles[store.activeId];
+
   function persistSave(pushCloud = true) {
+    store.profiles[store.activeId] = profile;
     try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify(profile));
+      localStorage.setItem(STORE_KEY, JSON.stringify(store));
     } catch {}
     if (pushCloud) pushCloudSave();
+  }
+
+  function switchProfile(id) {
+    if (!store.profiles[id]) return;
+    stopTimer();
+    store.activeId = id;
+    profile = store.profiles[id];
+    persistSave(false);
+    renderHUD();
+    showScreen('menu');
+    pullAndMergeCloud(true);
+  }
+
+  function createProfile(name) {
+    const cleanName = String(name || '').trim().slice(0, 18);
+    if (!cleanName) return null;
+    let id = slugifyId(cleanName);
+    let suffix = 2;
+    while (store.profiles[id]) {
+      id = `${slugifyId(cleanName)}-${suffix++}`;
+    }
+    const p = defaultProfile(cleanName, id);
+    store.profiles[id] = p;
+    store.activeId = id;
+    profile = p;
+    persistSave(false);
+    renderHUD();
+    return p;
+  }
+
+  function deleteProfile(id) {
+    const keys = Object.keys(store.profiles);
+    if (keys.length <= 1 || !store.profiles[id]) return false;
+    delete store.profiles[id];
+    if (store.activeId === id) {
+      store.activeId = Object.keys(store.profiles)[0];
+      profile = store.profiles[store.activeId];
+    }
+    persistSave(false);
+    renderHUD();
+    return true;
   }
 
   // Fusion intelligente (garde toujours le meilleur progrès entre Mobile et PC)
   function mergeProfiles(localP, incomingP) {
     if (!incomingP || typeof incomingP !== 'object') return localP;
-    const base = defaultSave();
+    const base = defaultProfile(localP.name || incomingP.name || 'Titou', localP.id);
     const mergedStars = { ...base.stars };
     for (const k of Object.keys(mergedStars)) {
       mergedStars[k] = Math.max(localP.stars?.[k] || 0, incomingP.stars?.[k] || 0);
@@ -127,6 +206,7 @@
 
   function encodeHeroCode(p) {
     const compact = {
+      n: p.name,
       x: p.xp,
       g: p.gems,
       c: p.bestCombo,
@@ -144,7 +224,6 @@
   function decodeHeroCode(raw) {
     if (!raw) return null;
     let code = String(raw).trim();
-    // Si l'utilisateur colle un lien complet ?save=...
     const match = code.match(/[?&]save=([^&#]+)/);
     if (match) code = decodeURIComponent(match[1]);
     if (code.startsWith('TITOU-')) code = code.slice(6);
@@ -155,6 +234,7 @@
       const d = JSON.parse(json);
       if (typeof d.x !== 'number') return null;
       return {
+        name: typeof d.n === 'string' && d.n.trim() ? d.n.trim() : null,
         xp: d.x || 0,
         gems: d.g || 0,
         bestCombo: d.c || 0,
@@ -274,6 +354,7 @@
   function renderHUD() {
     const { level, pct, rank } = getLevelInfo(profile.xp);
     $('hud-avatar').textContent = rank.icon;
+    $('hud-player-name').textContent = profile.name;
     $('hud-rank-name').textContent = rank.name;
     $('hud-level').textContent = level;
     $('hud-xp-fill').style.width = `${pct}%`;
@@ -282,6 +363,14 @@
     $('hud-badge-count').textContent = `${profile.badges.length}/${BADGES.length}`;
     $('btn-sound').textContent = profile.sound ? '🔊' : '🔇';
     SoundFX.setEnabled(profile.sound);
+
+    // Prénom dynamique partout dans l'interface
+    const heroName = $('hero-player-name');
+    if (heroName) heroName.textContent = profile.name;
+    const battleName = $('battle-player-name');
+    if (battleName) battleName.textContent = profile.name;
+    const badgesName = $('badges-player-name');
+    if (badgesName) badgesName.textContent = profile.name;
 
     // Étoiles sur les cartes du menu
     ['pythagore', 'relatifs', 'stats', 'boss'].forEach((w) => {
@@ -576,7 +665,7 @@
       eSprite.classList.add('hit-flash');
 
       fbBox.classList.add('is-correct');
-      fbBadge.textContent = isCrit ? '💥 COUP CRITIQUE !' : '✅ BIEN JOUÉ TITOU !';
+      fbBadge.textContent = isCrit ? '💥 COUP CRITIQUE !' : `✅ BIEN JOUÉ ${profile.name.toUpperCase()} !`;
       fbXp.textContent = `+${gainedXp} XP • +${gainedGems} 💎`;
       fbExplain.innerHTML = q.explain;
     } else {
@@ -675,7 +764,7 @@
         : 'BON ENTRAÎNEMENT !';
     $('result-subtitle').textContent =
       stars === 3
-        ? 'Même Saitama serait impressionné, Titou !'
+        ? `Même Saitama serait impressionné, ${profile.name} !`
         : stars === 2
         ? 'Solide ! Encore un petit effort pour les 3 étoiles.'
         : 'Tu progresses à chaque essai — jette un œil au Grimoire si besoin !';
@@ -700,12 +789,70 @@
     showScreen('result');
   }
 
-  // ==================== MODALES (GRIMOIRE, BADGES & SYNC) ====================
+  // ==================== MODALES (GRIMOIRE, BADGES, SYNC & PROFILS) ====================
   function openModal(id) {
     SoundFX.click();
     if (id === 'modal-badges') renderBadgesModal();
     if (id === 'modal-sync') renderSyncModal();
+    if (id === 'modal-profiles') renderProfilesModal();
     $(id).classList.remove('hidden');
+  }
+
+  function renderProfilesModal() {
+    const list = $('profiles-list');
+    const all = Object.values(store.profiles).sort((a, b) => (b.xp || 0) - (a.xp || 0));
+    const canDelete = all.length > 1;
+
+    list.innerHTML = all
+      .map((p, idx) => {
+        const info = getLevelInfo(p.xp || 0);
+        const totalStars = Object.values(p.stars || {}).reduce((s, v) => s + (v || 0), 0);
+        const isActive = p.id === store.activeId;
+        const medal = idx === 0 && all.length > 1 ? '🥇 ' : idx === 1 ? '🥈 ' : idx === 2 ? '🥉 ' : '';
+        return `
+          <div class="profile-row ${isActive ? 'active' : ''}" data-profile-id="${p.id}">
+            <div class="profile-row-left">
+              <div class="profile-row-ico">${info.rank.icon}</div>
+              <div>
+                <div class="profile-row-name">
+                  ${medal}${p.name}
+                  ${isActive ? '<span class="active-tag">ACTIF</span>' : ''}
+                </div>
+                <div class="profile-row-meta">
+                  Niv. ${info.level} (${info.rank.name}) • ${p.xp || 0} XP • ${totalStars}/12 ★ • ${(p.badges || []).length}/${BADGES.length} 🏆
+                </div>
+              </div>
+            </div>
+            ${
+              canDelete
+                ? `<button type="button" class="profile-del-btn" data-del-id="${p.id}" title="Supprimer ce compte">🗑️</button>`
+                : ''
+            }
+          </div>
+        `;
+      })
+      .join('');
+
+    list.querySelectorAll('.profile-row').forEach((row) => {
+      row.addEventListener('click', (e) => {
+        const delBtn = e.target.closest('.profile-del-btn');
+        if (delBtn) {
+          e.stopPropagation();
+          const id = delBtn.dataset.delId;
+          const target = store.profiles[id];
+          if (target && confirm(`Supprimer définitivement le compte "${target.name}" ?`)) {
+            SoundFX.click();
+            deleteProfile(id);
+            renderProfilesModal();
+          }
+          return;
+        }
+        const id = row.dataset.profileId;
+        SoundFX.correct(1);
+        switchProfile(id);
+        closeModal('modal-profiles');
+      });
+    });
   }
 
   function renderSyncModal() {
@@ -822,9 +969,24 @@
   });
 
   // Topbar actions
+  $('hud-rank-pill').addEventListener('click', () => openModal('modal-profiles'));
   $('btn-sync').addEventListener('click', () => openModal('modal-sync'));
   $('btn-grimoire').addEventListener('click', () => openModal('modal-grimoire'));
   $('btn-badges').addEventListener('click', () => openModal('modal-badges'));
+
+  // Création d'un nouveau compte
+  $('create-profile-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input = $('new-profile-name');
+    const name = input.value.trim();
+    if (!name) return;
+    SoundFX.victory();
+    createProfile(name);
+    input.value = '';
+    renderProfilesModal();
+    closeModal('modal-profiles');
+    showSlashBanner(`👤 BIENVENUE ${name.toUpperCase()} !`);
+  });
 
   // Actions de la modale Sync PC ↔ Mobile
   $('btn-share-link').addEventListener('click', async () => {
@@ -876,6 +1038,24 @@
     }
   });
 
+  function importDecodedProfile(decoded) {
+    if (!decoded) return false;
+    // Si le code porte un nom de profil (ex: "Titou"), on fusionne dans CE profil (ou on le crée)
+    if (decoded.name) {
+      const targetId = slugifyId(decoded.name);
+      const existing = store.profiles[targetId];
+      const base = existing || defaultProfile(decoded.name, targetId);
+      store.profiles[targetId] = mergeProfiles(base, decoded);
+      store.activeId = targetId;
+      profile = store.profiles[targetId];
+    } else {
+      profile = mergeProfiles(profile, decoded);
+    }
+    persistSave();
+    renderHUD();
+    return true;
+  }
+
   $('btn-import-code').addEventListener('click', () => {
     const raw = $('sync-code-in').value.trim();
     const msg = $('sync-status-msg');
@@ -886,14 +1066,12 @@
       SoundFX.wrong();
       return;
     }
-    profile = mergeProfiles(profile, decoded);
-    persistSave();
-    renderHUD();
+    importDecodedProfile(decoded);
     $('sync-code-out').value = encodeHeroCode(profile);
     msg.classList.remove('error');
-    msg.textContent = '✅ Progression importée et fusionnée avec succès !';
+    msg.textContent = `✅ Progression de ${profile.name} importée et fusionnée !`;
     SoundFX.victory();
-    showSlashBanner('☁️ PROGRESSION SYNCHRONISÉE !');
+    showSlashBanner(`☁️ ${profile.name.toUpperCase()} SYNCHRONISÉ !`);
   });
 
   $('btn-save-cloud').addEventListener('click', async () => {
@@ -954,12 +1132,10 @@
     if (!saveParam) return;
     const decoded = decodeHeroCode(saveParam);
     if (decoded) {
-      profile = mergeProfiles(profile, decoded);
-      persistSave();
-      // Nettoyer l'URL pour ne pas réimporter en boucle
+      importDecodedProfile(decoded);
       const cleanUrl = window.location.origin + window.location.pathname;
       window.history.replaceState({}, '', cleanUrl);
-      setTimeout(() => showSlashBanner('☁️ PROGRESSION IMPORTÉE !'), 300);
+      setTimeout(() => showSlashBanner(`☁️ ${profile.name.toUpperCase()} SYNCHRONISÉ !`), 300);
     }
   }
   $('btn-sound').addEventListener('click', () => {
@@ -988,10 +1164,10 @@
     });
   });
 
-  // Reset sauvegarde
+  // Reset sauvegarde du compte actif
   $('btn-reset-save').addEventListener('click', () => {
-    if (confirm('Réinitialiser tout l’XP, les étoiles et les trophées de Titou ?')) {
-      profile = defaultSave();
+    if (confirm(`Réinitialiser tout l’XP, les étoiles et les trophées de ${profile.name} ?`)) {
+      profile = defaultProfile(profile.name, profile.id);
       persistSave();
       renderHUD();
       renderBadgesModal();
