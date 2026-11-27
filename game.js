@@ -176,14 +176,14 @@
   }
 
   function calcSwitchReward(score, diff) {
-    if (score < 4) return 0;
-    let mins = 2; // 4 ou 5 / 8
-    if (score === 6) mins = 3;
-    else if (score === 7) mins = 5;
-    else if (score >= 8) mins = 7;
-    if (score >= 5) {
+    if (score < 5) return 0;
+    let mins = 1; // 5 / 8
+    if (score === 6) mins = 2;
+    else if (score === 7) mins = 3;
+    else if (score >= 8) mins = 4;
+    if (score >= 6) {
       if (diff === 2) mins += 1;
-      else if (diff >= 3) mins += 2;
+      else if (diff >= 3) mins += score >= 8 ? 2 : 1;
     }
     return mins;
   }
@@ -533,8 +533,8 @@
   }
 
   function xpNeededForLevel(lvl) {
-    // Progression fluide de 1 à 100 : rapide au début, épique vers le Niv. 100 !
-    return 100 + (lvl - 1) * 10;
+    // Progression longue durée de 1 à 100 (1 quête = Niv. 2, puis un vrai défi sur toute l'année jusqu'au SSJ6 !)
+    return 150 + (lvl - 1) * 25;
   }
 
   function getLevelInfo(xp) {
@@ -940,10 +940,10 @@
       session.results.push('correct');
 
       const isCrit = session.ultCharge >= 3;
-      const baseXp = 35 + settings.diff * 15;
-      const comboBonus = Math.min(session.combo * 10, 60);
-      const gainedXp = baseXp + comboBonus + (isCrit ? 40 : 0);
-      const gainedGems = 8 + settings.diff * 3 + (isCrit ? 10 : 0);
+      const baseXp = 10 + settings.diff * 5;
+      const comboBonus = Math.min(session.combo * 3, 15);
+      const gainedXp = baseXp + comboBonus + (isCrit ? 10 : 0);
+      const gainedGems = 4 + settings.diff * 2 + (isCrit ? 4 : 0);
 
       session.xpEarned += gainedXp;
       session.gemsEarned += gainedGems;
@@ -1108,7 +1108,7 @@
 
     $('result-stars').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
     $('res-score').textContent = `${session.score} / ${QUEST_LENGTH}`;
-    $('res-switch').textContent = switchGained > 0 ? `+${switchGained} min 🎮` : '0 min (vise ≥ 4/8 !)';
+    $('res-switch').textContent = switchGained > 0 ? `+${switchGained} min 🎮` : '0 min (vise ≥ 5/8 !)';
     $('res-xp').textContent = `+${session.xpEarned} XP`;
     $('res-gems').textContent = `+${session.gemsEarned} 💎`;
     $('res-combo').textContent = `🔥 x${session.maxCombo}`;
@@ -1644,8 +1644,8 @@
     msg.textContent = `✅ +${addMins} min de Switch ajoutées au compteur !`;
   }
 
-  $('btn-buy-5min').addEventListener('click', () => buySwitchBonus(250, 5));
-  $('btn-buy-15min').addEventListener('click', () => buySwitchBonus(700, 15));
+  $('btn-buy-5min').addEventListener('click', () => buySwitchBonus(500, 5));
+  $('btn-buy-15min').addEventListener('click', () => buySwitchBonus(1400, 15));
 
   document.querySelectorAll('[data-redeem]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -1745,8 +1745,8 @@
               SoundFX.correct(3);
               spawnParticles('#22c55e', 20);
               fb.style.color = '#86efac';
-              fb.textContent = `✅ ${step.check.okMsg} (+30 XP bonus !)`;
-              profile.xp += 30;
+              fb.textContent = `✅ ${step.check.okMsg} (+15 XP bonus !)`;
+              profile.xp += 15;
               profile.dojoCompleted = (profile.dojoCompleted || 0) + 1;
               if (!profile.badges.includes('dojo_first')) profile.badges.push('dojo_first');
               if (profile.dojoCompleted >= 3 && !profile.badges.includes('dojo_sage')) profile.badges.push('dojo_sage');
