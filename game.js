@@ -77,16 +77,28 @@
     `;
   }
 
-  // Trophées déblocables
+  // 20 Trophées déblocables
   const BADGES = [
-    { id: 'first_quest', icon: '🎮', title: 'Premier Combat', desc: 'Terminer ta première quête.' },
-    { id: 'pyth_master', icon: '⛏️', title: 'Architecte Diamant', desc: 'Obtenir 3★ dans la Forteresse de Pythagore.' },
-    { id: 'rel_master', icon: '⚔️', title: 'Dragon Slayer', desc: 'Obtenir 3★ dans l’Arène des Relatifs.' },
-    { id: 'stat_master', icon: '⚡', title: 'Maître Pokédex', desc: 'Obtenir 3★ au Labo des Statistiques.' },
-    { id: 'boss_master', icon: '👊', title: 'One Punch Math', desc: 'Vaincre le Boss Rush Classe S (≥ 6/8).' },
-    { id: 'combo_5', icon: '🔥', title: 'Série Infernale', desc: 'Atteindre un combo de 5 bonnes réponses.' },
-    { id: 'perfect', icon: '💎', title: 'Sans-Faute Absolu', desc: 'Faire 8/8 sur n’importe quelle quête.' },
-    { id: 'turbo_win', icon: '⏱️', title: 'Vitesse Sonic', desc: 'Gagner une quête en mode Turbo (chrono).' }
+    { id: 'first_quest',  icon: '🎮', title: 'Premier Combat',      desc: 'Terminer ta première quête.' },
+    { id: 'pyth_master',  icon: '⛏️', title: 'Architecte Diamant',  desc: 'Obtenir 3★ dans la Forteresse de Pythagore.' },
+    { id: 'rel_master',   icon: '⚔️', title: 'Dragon Slayer',       desc: 'Obtenir 3★ dans l’Arène des Relatifs.' },
+    { id: 'stat_master',  icon: '⚡', title: 'Maître Pokédex',      desc: 'Obtenir 3★ au Labo des Statistiques.' },
+    { id: 'boss_master',  icon: '👊', title: 'One Punch Math',      desc: 'Vaincre le Boss Rush Classe S (≥ 6/8).' },
+    { id: 'combo_5',      icon: '🔥', title: 'Série Infernale',     desc: 'Atteindre un combo de 5 bonnes réponses.' },
+    { id: 'combo_8',      icon: '☄️', title: 'Combo Divin (8/8)',   desc: 'Enchaîner 8 bonnes réponses d’affilée.' },
+    { id: 'perfect',      icon: '💎', title: 'Sans-Faute Absolu',   desc: 'Faire 8/8 sur n’importe quelle quête.' },
+    { id: 'turbo_win',    icon: '⏱️', title: 'Vitesse Sonic',       desc: 'Gagner une quête en mode Turbo (chrono).' },
+    { id: 'type_master',  icon: '⌨️', title: 'Calculateur Mental',  desc: 'Réussir une quête (≥ 6/8) en Mode Clavier.' },
+    { id: 'dojo_first',   icon: '🎓', title: 'Disciple du Dojo',    desc: 'Valider ton premier mini-test dans le Dojo.' },
+    { id: 'dojo_sage',    icon: '📚', title: 'Grand Sage',          desc: 'Valider 3 cours dans le Dojo des Senseis.' },
+    { id: 'quests_5',     icon: '🏃', title: 'Guerrier Assidu',     desc: 'Terminer 5 quêtes au total.' },
+    { id: 'quests_15',    icon: '🛡️', title: 'Vétéran de la 4ème',  desc: 'Terminer 15 quêtes au total.' },
+    { id: 'quests_30',    icon: '👑', title: 'Roi de l’Arène',      desc: 'Terminer 30 quêtes au total.' },
+    { id: 'time_15',      icon: '🕒', title: 'Échauffement 15 min', desc: 'Cumuler 15 minutes de révision active.' },
+    { id: 'time_30',      icon: '🎮', title: 'Palier Switch 30m',   desc: 'Débloquer tes premières 30 min de Switch !' },
+    { id: 'time_60',      icon: '🏆', title: 'Heure Héroïque',      desc: 'Cumuler 60 minutes de révision active.' },
+    { id: 'lvl_35',       icon: '🟡', title: 'Éveil Super Saiyan',  desc: 'Atteindre le Niveau 35 (Super Saiyan 1).' },
+    { id: 'lvl_100',      icon: '🌌', title: 'Super Saiyan 6 !',    desc: 'Atteindre le Niveau 100 ultime.' }
   ];
 
   const WORLD_META = {
@@ -140,6 +152,8 @@
     );
   }
 
+  const todayKey = () => new Date().toISOString().slice(0, 10);
+
   function defaultProfile(name = 'Titou', id = null) {
     return {
       id: id || slugifyId(name),
@@ -149,8 +163,22 @@
       bestCombo: 0,
       stars: { pythagore: 0, relatifs: 0, stats: 0, boss: 0 },
       badges: [],
-      sound: true
+      sound: true,
+      studySeconds: 0,
+      todayDate: todayKey(),
+      todaySeconds: 0,
+      bonusSwitchMinutes: 0,
+      switchMinutesUsed: 0,
+      questsCompleted: 0,
+      dojoCompleted: 0
     };
+  }
+
+  function getAvailableSwitchMinutes(p = profile) {
+    const earnedFromTime = Math.floor((p.studySeconds || 0) / 60);
+    const bonus = p.bonusSwitchMinutes || 0;
+    const used = p.switchMinutesUsed || 0;
+    return Math.max(0, earnedFromTime + bonus - used);
   }
 
   function normalizeProfile(raw, fallbackName = 'Titou') {
@@ -256,6 +284,9 @@
       ...(Array.isArray(localP.badges) ? localP.badges : []),
       ...(Array.isArray(incomingP.badges) ? incomingP.badges : [])
     ]);
+    const today = todayKey();
+    const localTodaySec = localP.todayDate === today ? (localP.todaySeconds || 0) : 0;
+    const incTodaySec = incomingP.todayDate === today ? (incomingP.todaySeconds || 0) : 0;
     return {
       ...base,
       xp: Math.max(Number(localP.xp) || 0, Number(incomingP.xp) || 0),
@@ -263,7 +294,14 @@
       bestCombo: Math.max(Number(localP.bestCombo) || 0, Number(incomingP.bestCombo) || 0),
       stars: mergedStars,
       badges: [...badgesSet],
-      sound: localP.sound !== undefined ? localP.sound : true
+      sound: localP.sound !== undefined ? localP.sound : true,
+      studySeconds: Math.max(Number(localP.studySeconds) || 0, Number(incomingP.studySeconds) || 0),
+      todayDate: today,
+      todaySeconds: Math.max(localTodaySec, incTodaySec),
+      bonusSwitchMinutes: Math.max(Number(localP.bonusSwitchMinutes) || 0, Number(incomingP.bonusSwitchMinutes) || 0),
+      switchMinutesUsed: Math.max(Number(localP.switchMinutesUsed) || 0, Number(incomingP.switchMinutesUsed) || 0),
+      questsCompleted: Math.max(Number(localP.questsCompleted) || 0, Number(incomingP.questsCompleted) || 0),
+      dojoCompleted: Math.max(Number(localP.dojoCompleted) || 0, Number(incomingP.dojoCompleted) || 0)
     };
   }
 
@@ -441,7 +479,10 @@
           !rProf ||
           (lProf.xp || 0) > (rProf.xp || 0) ||
           (lProf.gems || 0) > (rProf.gems || 0) ||
-          (lProf.badges || []).length > (rProf.badges || []).length;
+          (lProf.badges || []).length > (rProf.badges || []).length ||
+          (lProf.studySeconds || 0) > (rProf.studySeconds || 0) ||
+          (lProf.bonusSwitchMinutes || 0) > (rProf.bonusSwitchMinutes || 0) ||
+          (lProf.switchMinutesUsed || 0) > (rProf.switchMinutesUsed || 0);
         if (needsPush) {
           pushTasks.push(pushProfileToCloud(lProf));
         }
@@ -529,6 +570,10 @@
     $('hud-gems').textContent = profile.gems;
     $('hud-best-combo').textContent = profile.bestCombo;
     $('hud-badge-count').textContent = `${profile.badges.length}/${BADGES.length}`;
+    const tabBadgeCount = $('tab-badge-count');
+    if (tabBadgeCount) tabBadgeCount.textContent = `${profile.badges.length}/${BADGES.length}`;
+    const switchHud = $('hud-switch-mins');
+    if (switchHud) switchHud.textContent = `${getAvailableSwitchMinutes(profile)}m`;
     $('btn-sound').textContent = profile.sound ? '🔊' : '🔇';
     SoundFX.setEnabled(profile.sound);
 
@@ -958,6 +1003,7 @@
 
     profile.xp += session.xpEarned;
     profile.gems += session.gemsEarned;
+    profile.questsCompleted = (profile.questsCompleted || 0) + 1;
     if (session.maxCombo > profile.bestCombo) profile.bestCombo = session.maxCombo;
 
     // Calcul des étoiles
@@ -976,14 +1022,27 @@
       }
     };
 
+    const lvlAfter = getLevelInfo(profile.xp).level;
+    const totalMins = Math.floor((profile.studySeconds || 0) / 60);
+
     unlock('first_quest');
     if (session.world === 'pythagore' && stars === 3) unlock('pyth_master');
     if (session.world === 'relatifs' && stars === 3) unlock('rel_master');
     if (session.world === 'stats' && stars === 3) unlock('stat_master');
     if (session.world === 'boss' && session.score >= 6) unlock('boss_master');
     if (session.maxCombo >= 5) unlock('combo_5');
+    if (session.maxCombo >= QUEST_LENGTH) unlock('combo_8');
     if (session.score === QUEST_LENGTH) unlock('perfect');
     if (settings.timerMode === 'on' && session.score >= 5) unlock('turbo_win');
+    if (settings.inputMode === 'type' && session.score >= 6) unlock('type_master');
+    if (profile.questsCompleted >= 5) unlock('quests_5');
+    if (profile.questsCompleted >= 15) unlock('quests_15');
+    if (profile.questsCompleted >= 30) unlock('quests_30');
+    if (totalMins >= 15) unlock('time_15');
+    if (totalMins >= 30) unlock('time_30');
+    if (totalMins >= 60) unlock('time_60');
+    if (lvlAfter >= 35) unlock('lvl_35');
+    if (lvlAfter >= 100) unlock('lvl_100');
 
     persistSave();
     renderHUD();
@@ -1042,6 +1101,7 @@
     SoundFX.click();
     if (id === 'modal-badges') renderBadgesModal();
     if (id === 'modal-sync') renderSyncModal();
+    if (id === 'modal-rewards') renderRewardsModal();
     if (id === 'modal-profiles') {
       renderProfilesModal();
       pullAndMergeCloud(true).then(() => renderProfilesModal());
@@ -1463,6 +1523,131 @@
     }
   });
 
+  // ==================== SYSTÈME DE RÉCOMPENSES & TEMPS SWITCH ====================
+  const PARENT_PIN = '1234';
+  let lastActivityAt = Date.now();
+  let unsavedStudyTicks = 0;
+
+  ['pointerdown', 'keydown', 'touchstart'].forEach((evt) => {
+    window.addEventListener(evt, () => {
+      lastActivityAt = Date.now();
+    }, { passive: true });
+  });
+
+  function isActivelyStudying() {
+    if (document.hidden) return false;
+    if (Date.now() - lastActivityAt > 120000) return false; // Pause auto après 2 min d'inactivité
+    const inGame = screens.game.classList.contains('active');
+    const inDojo = !$('modal-dojo').classList.contains('hidden');
+    return inGame || inDojo;
+  }
+
+  // Tick chaque seconde pendant la révision active
+  setInterval(() => {
+    if (!isActivelyStudying()) return;
+    const today = todayKey();
+    if (profile.todayDate !== today) {
+      profile.todayDate = today;
+      profile.todaySeconds = 0;
+    }
+    const prevMins = Math.floor((profile.studySeconds || 0) / 60);
+    profile.studySeconds = (profile.studySeconds || 0) + 1;
+    profile.todaySeconds = (profile.todaySeconds || 0) + 1;
+    unsavedStudyTicks++;
+
+    const newMins = Math.floor(profile.studySeconds / 60);
+    if (newMins > prevMins) {
+      // Déblocage instantané des trophées de temps
+      if (newMins >= 15 && !profile.badges.includes('time_15')) profile.badges.push('time_15');
+      if (newMins >= 30 && !profile.badges.includes('time_30')) {
+        profile.badges.push('time_30');
+        showSlashBanner('🎮 30 MIN DE SWITCH DÉBLOQUÉES !');
+        SoundFX.victory();
+      }
+      if (newMins >= 60 && !profile.badges.includes('time_60')) profile.badges.push('time_60');
+      persistSave(true);
+      renderHUD();
+    } else if (unsavedStudyTicks >= 15) {
+      unsavedStudyTicks = 0;
+      persistSave(false);
+    }
+
+    if (!$('modal-rewards').classList.contains('hidden')) {
+      renderRewardsModal();
+    }
+  }, 1000);
+
+  function renderRewardsModal() {
+    const avail = getAvailableSwitchMinutes(profile);
+    const totalMins = Math.floor((profile.studySeconds || 0) / 60);
+    const today = todayKey();
+    const tSec = profile.todayDate === today ? (profile.todaySeconds || 0) : 0;
+    const tM = Math.floor(tSec / 60);
+    const tS = String(tSec % 60).padStart(2, '0');
+    const goalProgress = avail >= 30 ? 30 : avail;
+
+    $('rewards-player-name').textContent = profile.name;
+    $('reward-avail-mins').textContent = avail;
+    $('reward-goal-text').textContent = `${goalProgress} / 30 min`;
+    $('reward-goal-fill').style.width = `${Math.min(100, Math.round((goalProgress / 30) * 100))}%`;
+    $('reward-today-time').textContent = `${tM} min ${tS} s`;
+    $('reward-total-time').textContent = `${totalMins} min`;
+    $('reward-gems-balance').textContent = profile.gems || 0;
+  }
+
+  $('btn-rewards').addEventListener('click', () => openModal('modal-rewards'));
+
+  function buySwitchBonus(costGems, addMins) {
+    const msg = $('reward-shop-msg');
+    if ((profile.gems || 0) < costGems) {
+      SoundFX.wrong();
+      msg.classList.add('error');
+      msg.textContent = `❌ Il te manque ${costGems - (profile.gems || 0)} 💎 pour ce bonus !`;
+      return;
+    }
+    profile.gems -= costGems;
+    profile.bonusSwitchMinutes = (profile.bonusSwitchMinutes || 0) + addMins;
+    persistSave(true);
+    renderHUD();
+    renderRewardsModal();
+    SoundFX.victory();
+    spawnParticles('#38bdf8', 26);
+    msg.classList.remove('error');
+    msg.textContent = `✅ +${addMins} min de Switch ajoutées au compteur !`;
+  }
+
+  $('btn-buy-5min').addEventListener('click', () => buySwitchBonus(250, 5));
+  $('btn-buy-15min').addEventListener('click', () => buySwitchBonus(700, 15));
+
+  document.querySelectorAll('[data-redeem]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const pin = $('parent-pin-input').value.trim();
+      const msg = $('parent-redeem-msg');
+      if (pin !== PARENT_PIN) {
+        SoundFX.wrong();
+        msg.classList.add('error');
+        msg.textContent = '❌ Code Parent incorrect (code par défaut : 1234).';
+        return;
+      }
+      const avail = getAvailableSwitchMinutes(profile);
+      const req = btn.dataset.redeem === 'all' ? avail : Number(btn.dataset.redeem);
+      if (avail <= 0 || req <= 0) {
+        msg.classList.add('error');
+        msg.textContent = 'Aucune minute Switch disponible à encaisser.';
+        return;
+      }
+      const deduct = Math.min(avail, req);
+      profile.switchMinutesUsed = (profile.switchMinutesUsed || 0) + deduct;
+      $('parent-pin-input').value = '';
+      persistSave(true);
+      renderHUD();
+      renderRewardsModal();
+      SoundFX.correct(2);
+      msg.classList.remove('error');
+      msg.textContent = `✅ ${deduct} min de Switch validées et déduites ! Bon jeu sur Switch !`;
+    });
+  });
+
   // ==================== DOJO PÉDAGOGIQUE INTERACTIF (COURS PAS-À-PAS) ====================
   const Dojo = (() => {
     let courseId = 'pythagore';
@@ -1534,6 +1719,9 @@
               fb.style.color = '#86efac';
               fb.textContent = `✅ ${step.check.okMsg} (+30 XP bonus !)`;
               profile.xp += 30;
+              profile.dojoCompleted = (profile.dojoCompleted || 0) + 1;
+              if (!profile.badges.includes('dojo_first')) profile.badges.push('dojo_first');
+              if (profile.dojoCompleted >= 3 && !profile.badges.includes('dojo_sage')) profile.badges.push('dojo_sage');
               persistSave();
               renderHUD();
             } else {
@@ -1882,7 +2070,8 @@
       !$('modal-badges').classList.contains('hidden') ||
       !$('modal-sync').classList.contains('hidden') ||
       !$('modal-profiles').classList.contains('hidden') ||
-      !$('modal-dojo').classList.contains('hidden')
+      !$('modal-dojo').classList.contains('hidden') ||
+      !$('modal-rewards').classList.contains('hidden')
     ) {
       if (e.key === 'Escape') {
         closeModal('modal-grimoire');
@@ -1890,6 +2079,7 @@
         closeModal('modal-sync');
         closeModal('modal-profiles');
         closeModal('modal-dojo');
+        closeModal('modal-rewards');
       }
       return;
     }

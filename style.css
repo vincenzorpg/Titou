@@ -2247,6 +2247,81 @@ button, .world-card {
   color: #bbf7d0;
 }
 
+.switch-btn {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.22), rgba(56, 189, 248, 0.22));
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #f8fafc;
+}
+
+.switch-hero-card {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.14), rgba(11, 15, 25, 0.95) 50%, rgba(56, 189, 248, 0.16));
+  border: 2px solid rgba(56, 189, 248, 0.35);
+  border-radius: 18px;
+  padding: 18px;
+  text-align: center;
+}
+
+.switch-rule-tag {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.7px;
+  color: var(--accent);
+  background: rgba(250, 204, 21, 0.12);
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+}
+
+.switch-big-balance {
+  font-size: 2.6rem;
+  font-weight: 900;
+  line-height: 1.1;
+  color: #f8fafc;
+  margin-bottom: 12px;
+}
+
+.switch-big-balance small {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #7dd3fc;
+}
+
+.switch-goal-wrap {
+  max-width: 420px;
+  margin: 0 auto 12px;
+}
+
+.switch-goal-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.switch-fill {
+  background: linear-gradient(90deg, #ef4444, #facc15, #38bdf8);
+}
+
+.switch-substats {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 0.86rem;
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+
+.switch-note {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
 .sign-toggle-btn {
   min-width: 50px;
   background: var(--bg-elev);

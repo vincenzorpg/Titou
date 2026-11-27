@@ -70,6 +70,9 @@
       <button class="icon-btn install-btn hidden" id="btn-install-pwa" title="Installer l'application sur ton téléphone ou PC">
         📲 <span>Installer</span>
       </button>
+      <button class="icon-btn switch-btn" id="btn-rewards" title="Récompenses : 30 min de révision = 30 min de Switch">
+        🎮 <span id="hud-switch-mins">0m</span>
+      </button>
       <button class="icon-btn" id="btn-sync" title="Synchroniser la progression entre Mobile et PC">
         ☁️ <span>Sync</span>
       </button>
@@ -79,8 +82,8 @@
       <button class="icon-btn" id="btn-grimoire" title="Grimoire de révision (Formules & Astuces)">
         📖 <span>Grimoire</span>
       </button>
-      <button class="icon-btn" id="btn-badges" title="Trophées de Titou">
-        🏆 <span id="hud-badge-count">0/8</span>
+      <button class="icon-btn" id="btn-badges" title="Trophées & Transformations">
+        🏆 <span id="hud-badge-count">0/20</span>
       </button>
       <button class="icon-btn" id="btn-sound" title="Activer / Couper le son">
         🔊
@@ -503,7 +506,7 @@
       </div>
       <div class="modal-tabs" id="badges-tabs">
         <button class="tab-btn active" data-btab="b-evolutions">🔥 Transformations (Niv. 100)</button>
-        <button class="tab-btn" data-btab="b-trophies">🏆 Trophées (8)</button>
+        <button class="tab-btn" data-btab="b-trophies">🏆 Trophées (<span id="tab-badge-count">0/20</span>)</button>
       </div>
       <div class="modal-body">
         <div class="tab-panel active" id="b-evolutions">
@@ -642,6 +645,68 @@
       <button type="button" class="c-btn c-eq" data-act="eq">=</button>
     </div>
   </aside>
+
+  <!-- ==================== MODALE : RÉCOMPENSES & TEMPS SWITCH ==================== -->
+  <div class="modal-backdrop hidden" id="modal-rewards" role="dialog" aria-modal="true" aria-label="Récompenses Temps Switch">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>🎮 Récompenses Switch — <span id="rewards-player-name">Titou</span></h2>
+        <button class="modal-close" data-close="modal-rewards">✕</button>
+      </div>
+      <div class="modal-body sync-body">
+        <div class="switch-hero-card">
+          <div class="switch-rule-tag">⏱️ 1 MIN DE RÉVISION ACTIVE = 1 MIN DE SWITCH</div>
+          <div class="switch-big-balance">
+            <span id="reward-avail-mins">0</span> <small>min de Switch dispo</small>
+          </div>
+          <div class="switch-goal-wrap">
+            <div class="switch-goal-meta">
+              <span>Prochain palier 30 min</span>
+              <span id="reward-goal-text">0 / 30 min</span>
+            </div>
+            <div class="bar-track" style="height:12px;">
+              <div class="bar-fill switch-fill" id="reward-goal-fill" style="width:0%"></div>
+            </div>
+          </div>
+          <div class="switch-substats">
+            <div>📅 Aujourd'hui : <strong id="reward-today-time">0 min 00 s</strong></div>
+            <div>🏆 Total révisé : <strong id="reward-total-time">0 min</strong></div>
+          </div>
+          <p class="switch-note">
+            Le chrono tourne automatiquement pendant les quêtes et les cours du Dojo (et se met en pause si tu ne touches plus l’écran).
+          </p>
+        </div>
+
+        <!-- Boutique Émeraudes -> Bonus Switch -->
+        <div class="memo-card">
+          <h3>💎 Échanger tes Émeraudes en Bonus Switch</h3>
+          <p class="sync-help">Tu as actuellement <strong id="reward-gems-balance">0</strong> 💎. Gagne encore plus de temps grâce à tes bonnes réponses !</p>
+          <div class="sync-actions-row">
+            <button type="button" class="btn-primary" id="btn-buy-5min">💎 250 💎 → +5 min Switch</button>
+            <button type="button" class="btn-secondary" id="btn-buy-15min">💎 700 💎 → +15 min Switch</button>
+          </div>
+          <p class="sync-status" id="reward-shop-msg"></p>
+        </div>
+
+        <!-- Espace Parent : Valider / Déduire le temps Switch utilisé -->
+        <details class="memo-card cloud-details">
+          <summary>🔐 Espace Parent : Valider / encaisser le temps Switch</summary>
+          <p class="sync-help" style="margin-top:8px;">
+            Quand Titou utilise son temps de Switch, entre le code Parent (par défaut : <code>1234</code>) pour déduire les minutes utilisées (synchronisé PC ↔ Mobile).
+          </p>
+          <div class="cloud-form">
+            <input type="password" id="parent-pin-input" class="sync-input" inputmode="numeric" maxlength="8" placeholder="Code Parent (défaut : 1234)">
+            <div class="sync-actions-row">
+              <button type="button" class="btn-primary" data-redeem="30">🎮 Valider 30 min</button>
+              <button type="button" class="btn-secondary" data-redeem="15">🎮 Valider 15 min</button>
+              <button type="button" class="btn-secondary" data-redeem="all">Tout encaisser</button>
+            </div>
+            <p class="sync-status" id="parent-redeem-msg"></p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
 
   <!-- ==================== MODALE : PARCOURS PÉDAGOGIQUE (DOJO DES SENSEIS) ==================== -->
   <div class="modal-backdrop hidden" id="modal-dojo" role="dialog" aria-modal="true" aria-label="Parcours de cours interactif">
