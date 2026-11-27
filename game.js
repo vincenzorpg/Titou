@@ -309,7 +309,12 @@
         body: JSON.stringify({ ...p, updatedAt: Date.now() })
       });
       if (res.ok) {
-        setSyncIndicator('ok');
+        // Mettre à jour l'écran de choix de profil s'il est encore ouvert
+      if (!$('welcome-overlay').classList.contains('hidden')) {
+        renderWelcomeOverlay();
+      }
+
+      setSyncIndicator('ok');
         return true;
       }
       setSyncIndicator('offline');
@@ -381,6 +386,11 @@
       }
       if (pushTasks.length > 0) {
         await Promise.all(pushTasks);
+      }
+
+      // Mettre à jour l'écran de choix de profil s'il est encore ouvert
+      if (!$('welcome-overlay').classList.contains('hidden')) {
+        renderWelcomeOverlay();
       }
 
       setSyncIndicator('ok');
@@ -1211,14 +1221,16 @@
   function checkUrlSaveImport() {
     const params = new URLSearchParams(window.location.search);
     const saveParam = params.get('save');
-    if (!saveParam) return;
+    if (!saveParam) return false;
     const decoded = decodeHeroCode(saveParam);
     if (decoded) {
       importDecodedProfile(decoded);
       const cleanUrl = window.location.origin + window.location.pathname;
       window.history.replaceState({}, '', cleanUrl);
       setTimeout(() => showSlashBanner(`☁️ ${profile.name.toUpperCase()} SYNCHRONISÉ !`), 300);
+      return true;
     }
+    return false;
   }
   $('btn-sound').addEventListener('click', () => {
     profile.sound = !profile.sound;
@@ -1490,8 +1502,56 @@
     if (!document.hidden) pullAndMergeCloud(true);
   });
 
+  // ==================== ÉCRAN "QUI JOUE ?" AU DÉMARRAGE ====================
+  function renderWelcomeOverlay() {
+    const grid = $('welcome-profiles-grid');
+    if (!grid) return;
+    const all = Object.values(store.profiles).sort((a, b) => (b.xp || 0) - (a.xp || 0));
+    grid.innerHTML = all
+      .map((p) => {
+        const info = getLevelInfo(p.xp || 0);
+        const totalStars = Object.values(p.stars || {}).reduce((s, v) => s + (v || 0), 0);
+        return `
+          <button type="button" class="welcome-card" data-pid="${p.id}">
+            <div class="welcome-card-ico">${info.rank.icon}</div>
+            <div class="welcome-card-name">${p.name}</div>
+            <div class="welcome-card-meta">Niv. ${info.level} • ${p.xp || 0} XP • ${totalStars}★</div>
+          </button>
+        `;
+      })
+      .join('');
+
+    grid.querySelectorAll('.welcome-card').forEach((card) => {
+      card.addEventListener('click', () => {
+        SoundFX.correct(2);
+        switchProfile(card.dataset.pid);
+        $('welcome-overlay').classList.add('hidden');
+      });
+    });
+  }
+
+  function showWelcomePicker() {
+    renderWelcomeOverlay();
+    $('welcome-overlay').classList.remove('hidden');
+  }
+
+  $('welcome-create-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input = $('welcome-new-name');
+    const name = input.value.trim();
+    if (!name) return;
+    SoundFX.victory();
+    createProfile(name);
+    input.value = '';
+    $('welcome-overlay').classList.add('hidden');
+    showSlashBanner(`👤 BIENVENUE ${name.toUpperCase()} !`);
+  });
+
   // Init
-  checkUrlSaveImport();
+  const importedFromUrl = checkUrlSaveImport();
   renderHUD();
+  if (!importedFromUrl) {
+    showWelcomePicker();
+  }
   pullAndMergeCloud(true);
 })();

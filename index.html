@@ -14,6 +14,20 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- ==================== ÉCRAN DE CHOIX DE PROFIL AU DÉMARRAGE ==================== -->
+  <div class="welcome-overlay hidden" id="welcome-overlay" role="dialog" aria-modal="true" aria-label="Choisir ton profil">
+    <div class="welcome-box">
+      <div class="welcome-badge">⚔️ MATH QUEST • 4ÈME</div>
+      <h1>Qui joue aujourd'hui ?</h1>
+      <p class="welcome-sub">Choisis ton compte pour retrouver tes XP, étoiles et trophées.</p>
+      <div class="welcome-profiles-grid" id="welcome-profiles-grid"></div>
+      <form class="welcome-create-form" id="welcome-create-form">
+        <input type="text" id="welcome-new-name" class="sync-input" maxlength="18" placeholder="Ou crée un nouveau profil (ex: Papa, Maman)...">
+        <button type="submit" class="btn-secondary">➕ Créer</button>
+      </form>
+    </div>
+  </div>
+
   <!-- Fond animé discret -->
   <div class="bg-grid" aria-hidden="true"></div>
   <div id="fx-layer" aria-hidden="true"></div>
