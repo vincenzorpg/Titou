@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mathquest-titou-v11';
+const CACHE_NAME = 'mathquest-titou-v12';
 const ASSETS = [
   './',
   './index.html',

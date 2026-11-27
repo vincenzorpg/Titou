@@ -423,9 +423,15 @@
         body: JSON.stringify({ ...p, updatedAt: Date.now() })
       });
       if (res.ok) {
-        // Mettre à jour l'écran de choix de profil s'il est encore ouvert
+        // Mettre à jour les modales ouvertes en direct après synchro
       if (!$('welcome-overlay').classList.contains('hidden')) {
         renderWelcomeOverlay();
+      }
+      if (!$('modal-rewards').classList.contains('hidden')) {
+        renderRewardsModal();
+      }
+      if (!$('modal-profiles').classList.contains('hidden')) {
+        renderProfilesModal();
       }
 
       setSyncIndicator('ok');
@@ -506,9 +512,15 @@
         await Promise.all(pushTasks);
       }
 
-      // Mettre à jour l'écran de choix de profil s'il est encore ouvert
+      // Mettre à jour les modales ouvertes en direct après synchro
       if (!$('welcome-overlay').classList.contains('hidden')) {
         renderWelcomeOverlay();
+      }
+      if (!$('modal-rewards').classList.contains('hidden')) {
+        renderRewardsModal();
+      }
+      if (!$('modal-profiles').classList.contains('hidden')) {
+        renderProfilesModal();
       }
 
       setSyncIndicator('ok');
@@ -1120,7 +1132,10 @@
     SoundFX.click();
     if (id === 'modal-badges') renderBadgesModal();
     if (id === 'modal-sync') renderSyncModal();
-    if (id === 'modal-rewards') renderRewardsModal();
+    if (id === 'modal-rewards') {
+      renderRewardsModal();
+      pullAndMergeCloud(true).then(() => renderRewardsModal());
+    }
     if (id === 'modal-profiles') {
       renderProfilesModal();
       pullAndMergeCloud(true).then(() => renderProfilesModal());
@@ -1543,7 +1558,7 @@
   });
 
   // ==================== SYSTÈME DE RÉCOMPENSES & TEMPS SWITCH ====================
-  const PARENT_PIN = '1234';
+  const PARENT_PIN = '19922';
   let lastActivityAt = Date.now();
   let unsavedStudyTicks = 0;
 
@@ -1639,7 +1654,7 @@
       if (pin !== PARENT_PIN) {
         SoundFX.wrong();
         msg.classList.add('error');
-        msg.textContent = '❌ Code Parent incorrect (code par défaut : 1234).';
+        msg.textContent = '❌ Code Parent incorrect.';
         return;
       }
       const avail = getAvailableSwitchMinutes(profile);
@@ -2113,11 +2128,16 @@
     }
   });
 
-  // Auto-sync au retour sur l'appli ou au retour du réseau
+  // Auto-sync continu (toutes les 20s si onglet actif) + au retour sur l'appli ou du réseau
   window.addEventListener('online', () => pullAndMergeCloud(true));
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) pullAndMergeCloud(true);
   });
+  setInterval(() => {
+    if (!document.hidden && navigator.onLine) {
+      pullAndMergeCloud(true);
+    }
+  }, 20000);
 
   // ==================== ÉCRAN "QUI JOUE ?" AU DÉMARRAGE ====================
   function renderWelcomeOverlay() {
