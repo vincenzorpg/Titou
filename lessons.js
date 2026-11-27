@@ -205,6 +205,59 @@ const MathLessons = (() => {
           }
         }
       ]
+    },
+
+    fractions: {
+      id: 'fractions',
+      title: '💥 Dojo des Fractions (Smash Bros)',
+      subtitle: 'Simplifier, additionner, multiplier et diviser des fractions en 4ème',
+      steps: [
+        {
+          badge: 'ÉTAPE 1 / 4 • SIMPLIFIER',
+          title: 'Rendre une fraction irréductible',
+          body: `
+            <p>Simplifier une fraction, c’est <strong>diviser le haut et le bas par le même nombre</strong> (sans jamais changer sa valeur !).</p>
+            <div class="lesson-big-formula">12 / 18  →  (12 ÷ 6) / (18 ÷ 6)  =  2 / 3</div>
+            <div class="lesson-rule">💥 <strong>Astuce :</strong> Pense aux tables de 2, 3, 5 et 10 pour repérer vite un diviseur commun !</div>
+          `
+        },
+        {
+          badge: 'ÉTAPE 2 / 4 • ADDITION & SOUSTRACTION',
+          title: 'Règle d’or : MÊME DÉNOMINATEUR obligatoire !',
+          body: `
+            <p>On ne peut additionner ou soustraire que des parts de la <strong>même taille</strong> :</p>
+            <ol class="lesson-steps-list">
+              <li>On transforme les fractions pour avoir le <strong>même nombre en bas</strong>.<br>Ex : <code>1/2 + 1/4</code> → <code>2/4 + 1/4</code></li>
+              <li>On additionne (ou soustrait) <strong>uniquement les nombres du haut</strong> : <code>(2 + 1) / 4 = 3/4</code> !</li>
+            </ol>
+            <div class="lesson-rule">⚠️ <strong>Piège classique :</strong> On n’additionne JAMAIS les dénominateurs entre eux !</div>
+          `
+        },
+        {
+          badge: 'ÉTAPE 3 / 4 • MULTIPLICATION (×)',
+          title: 'La plus facile : Haut × Haut et Bas × Bas !',
+          body: `
+            <p>Pour multiplier deux fractions, <strong>pas besoin de même dénominateur</strong> !</p>
+            <div class="lesson-big-formula">(2 / 3) × (5 / 7)  =  (2 × 5) / (3 × 7)  =  10 / 21</div>
+            <p>Pense juste à simplifier ton résultat final si le haut et le bas ont un diviseur commun.</p>
+          `
+        },
+        {
+          badge: 'ÉTAPE 4 / 4 • DIVISION (÷) & MINI-TEST',
+          title: 'Le Final Smash de 4ème : Multiplier par l’INVERSE !',
+          body: `
+            <p>Pour <strong>diviser par une fraction</strong>, tu la retournes (tu prends son inverse) et tu <strong>multiplies</strong> :</p>
+            <div class="lesson-big-formula">(2 / 3) ÷ (4 / 5)  =  (2 / 3) × (5 / 4)  =  10 / 12  =  5 / 6</div>
+          `,
+          check: {
+            question: 'Mini-test : Comment calcule-t-on (1 / 2) ÷ (3 / 5) ?',
+            options: ['(1 / 2) × (5 / 3) = 5 / 6', '(1 / 2) × (3 / 5) = 3 / 10', '(1 + 3) / (2 + 5) = 4 / 7'],
+            correctIndex: 0,
+            okMsg: 'GAME SET ! Diviser par 3/5, c’est multiplier par son inverse 5/3 → 5/6 !',
+            retryMsg: 'Rappel : on retourne la 2ème fraction ! 3/5 devient 5/3, puis on multiplie : (1×5)/(2×3) = 5/6.'
+          }
+        }
+      ]
     }
   };
 

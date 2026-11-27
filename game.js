@@ -83,6 +83,7 @@
     { id: 'pyth_master',  icon: '⛏️', title: 'Architecte Diamant',  desc: 'Obtenir 3★ dans la Forteresse de Pythagore.' },
     { id: 'rel_master',   icon: '⚔️', title: 'Dragon Slayer',       desc: 'Obtenir 3★ dans l’Arène des Relatifs.' },
     { id: 'stat_master',  icon: '⚡', title: 'Maître Pokédex',      desc: 'Obtenir 3★ au Labo des Statistiques.' },
+    { id: 'frac_master',  icon: '💥', title: 'Final Smash Maths',   desc: 'Obtenir 3★ dans l’Arène des Fractions.' },
     { id: 'boss_master',  icon: '👊', title: 'One Punch Math',      desc: 'Vaincre le Boss Rush Classe S (≥ 6/8).' },
     { id: 'combo_5',      icon: '🔥', title: 'Série Infernale',     desc: 'Atteindre un combo de 5 bonnes réponses.' },
     { id: 'combo_8',      icon: '☄️', title: 'Combo Divin (8/8)',   desc: 'Enchaîner 8 bonnes réponses d’affilée.' },
@@ -105,38 +106,42 @@
     pythagore: {
       label: '⛏️ Forteresse de Pythagore',
       enemies: [
-        { name: 'Creeper Géométrique', sprite: '🟩' },
-        { name: 'Enderman des Angles', sprite: '👾' },
-        { name: 'Ender Dragon', sprite: '🐉' }
-      ],
-      playerSprite: '⛏️'
+        { name: 'Creeper Géométrique', art: 'creeper' },
+        { name: 'Enderman des Angles', art: 'enderman' },
+        { name: 'Ender Dragon', art: 'enderdragon' }
+      ]
     },
     relatifs: {
       label: '⚔️ Arène des Relatifs',
       enemies: [
-        { name: 'Apôtre des Signes', sprite: '👹' },
-        { name: 'Zodd l’Immortel', sprite: '🐃' },
-        { name: 'Chevalier de l’Éclipse', sprite: '🌑' }
-      ],
-      playerSprite: '⚔️'
+        { name: 'Apôtre des Signes', art: 'apostle' },
+        { name: 'Zodd l’Immortel', art: 'zodd' },
+        { name: 'Chevalier de l’Éclipse', art: 'eclipse' }
+      ]
     },
     stats: {
       label: '⚡ Labo des Statistiques',
       enemies: [
-        { name: 'Team Rocket Stats', sprite: '🚀' },
-        { name: 'Mewtwo Sauveur', sprite: '🔮' },
-        { name: 'Champion de la Ligue', sprite: '🏆' }
-      ],
-      playerSprite: '⚡'
+        { name: 'Boss Team Rocket', art: 'rocket' },
+        { name: 'Mewtwo Psychique', art: 'mewtwo' },
+        { name: 'Dracaufeu Chromatique', art: 'charizard' }
+      ]
+    },
+    fractions: {
+      label: '💥 Smash Bros : Fractions',
+      enemies: [
+        { name: 'Bowser Méga-Fraction', art: 'bowser' },
+        { name: 'Ganondorf des Inverses', art: 'ganondorf' },
+        { name: 'Créa-Main (Master Hand)', art: 'masterhand' }
+      ]
     },
     boss: {
       label: '🥊 Boss Rush : Classe S',
       enemies: [
-        { name: 'Roi des Profondeurs', sprite: '🐙' },
-        { name: 'Garou le Chasseur', sprite: '🐺' },
-        { name: 'Seigneur Boros', sprite: '☄️' }
-      ],
-      playerSprite: '👊'
+        { name: 'Roi des Profondeurs', art: 'seaking' },
+        { name: 'Garou le Chasseur', art: 'garou' },
+        { name: 'Seigneur Boros', art: 'boros' }
+      ]
     }
   };
 
@@ -161,7 +166,7 @@
       xp: 0,
       gems: 0,
       bestCombo: 0,
-      stars: { pythagore: 0, relatifs: 0, stats: 0, boss: 0 },
+      stars: { pythagore: 0, relatifs: 0, stats: 0, fractions: 0, boss: 0 },
       badges: [],
       sound: true,
       studySeconds: 0,
@@ -325,7 +330,13 @@
       x: p.xp,
       g: p.gems,
       c: p.bestCombo,
-      s: [p.stars.pythagore || 0, p.stars.relatifs || 0, p.stars.stats || 0, p.stars.boss || 0],
+      s: [
+        p.stars.pythagore || 0,
+        p.stars.relatifs || 0,
+        p.stars.stats || 0,
+        p.stars.boss || 0,
+        p.stars.fractions || 0
+      ],
       b: p.badges
     };
     const json = JSON.stringify(compact);
@@ -357,7 +368,8 @@
           pythagore: d.s?.[0] || 0,
           relatifs: d.s?.[1] || 0,
           stats: d.s?.[2] || 0,
-          boss: d.s?.[3] || 0
+          boss: d.s?.[3] || 0,
+          fractions: d.s?.[4] || 0
         },
         badges: Array.isArray(d.b) ? d.b : []
       };
@@ -613,7 +625,7 @@
     if (badgesName) badgesName.textContent = profile.name;
 
     // Étoiles sur les cartes du menu
-    ['pythagore', 'relatifs', 'stats', 'boss'].forEach((w) => {
+    ['pythagore', 'relatifs', 'stats', 'fractions', 'boss'].forEach((w) => {
       const s = profile.stars[w] || 0;
       const el = $(`stars-${w}`);
       if (el) el.textContent = '★'.repeat(s) + '☆'.repeat(3 - s);
@@ -748,7 +760,7 @@
 
     $('game-world-label').textContent = meta.label;
     $('enemy-name').textContent = enemy.name;
-    $('enemy-sprite').textContent = enemy.sprite;
+    $('enemy-sprite').innerHTML = BossArt.get(enemy.art);
     $('enemy-sprite').classList.remove('ko');
     updatePlayerBattleAura();
     updateBattleBars();
@@ -959,6 +971,7 @@
         const critLabel =
           rank.style === 'ssj6' ? '🌌 KAMEHAMEHA OMNI-INFINI !!'
           : rank.lvl >= 35 ? '⚡ SUPER KAMEHAMEHA CRITIQUE !!'
+          : session.world === 'fractions' ? '💥 FINAL SMASH CRITIQUE !!'
           : session.world === 'boss' ? '👊 SERIOUS PUNCH !!'
           : session.world === 'relatifs' ? '⚔️ DRAGON SLAYER CRITIQUE !'
           : session.world === 'pythagore' ? '💎 COUP CRITIQUE DIAMANT !'
@@ -1058,6 +1071,7 @@
     if (session.world === 'pythagore' && stars === 3) unlock('pyth_master');
     if (session.world === 'relatifs' && stars === 3) unlock('rel_master');
     if (session.world === 'stats' && stars === 3) unlock('stat_master');
+    if (session.world === 'fractions' && stars === 3) unlock('frac_master');
     if (session.world === 'boss' && session.score >= 6) unlock('boss_master');
     if (session.maxCombo >= 5) unlock('combo_5');
     if (session.maxCombo >= QUEST_LENGTH) unlock('combo_8');
@@ -1164,7 +1178,7 @@
                   ${isActive ? '<span class="active-tag">ACTIF</span>' : ''}
                 </div>
                 <div class="profile-row-meta">
-                  Niv. ${info.level} (${info.rank.name}) • ${p.xp || 0} XP • ${totalStars}/12 ★ • ${(p.badges || []).length}/${BADGES.length} 🏆
+                  Niv. ${info.level} (${info.rank.name}) • ${p.xp || 0} XP • ${totalStars}/15 ★ • ${(p.badges || []).length}/${BADGES.length} 🏆
                 </div>
               </div>
             </div>

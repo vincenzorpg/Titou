@@ -224,7 +224,34 @@
           <button class="play-btn">⚡ Analyser l'Équipe</button>
         </article>
 
-        <!-- Monde 4 : One Punch Man / Boss Rush -->
+        <!-- Monde 4 : Super Smash Bros / Fractions -->
+        <article class="world-card theme-smash" data-world="fractions">
+          <div class="world-card-top">
+            <span class="world-badge">SMASH BROS</span>
+            <span class="world-stars" id="stars-fractions">☆☆☆</span>
+          </div>
+          <div class="world-art">
+            <svg viewBox="0 0 120 80" class="art-svg">
+              <!-- Balle Smash + fraction -->
+              <circle cx="42" cy="40" r="24" fill="#0f172a" stroke="#38bdf8" stroke-width="3.5"/>
+              <line x1="18" y1="47" x2="66" y2="47" stroke="#38bdf8" stroke-width="5"/>
+              <line x1="34" y1="16" x2="34" y2="64" stroke="#38bdf8" stroke-width="7"/>
+              <text x="90" y="34" text-anchor="middle" fill="#facc15" font-size="18" font-weight="900">3</text>
+              <line x1="76" y1="41" x2="104" y2="41" stroke="#f8fafc" stroke-width="3"/>
+              <text x="90" y="61" text-anchor="middle" fill="#38bdf8" font-size="18" font-weight="900">4</text>
+            </svg>
+          </div>
+          <h2>L'Arène des Fractions</h2>
+          <p class="world-topic">Simplifier, additionner, multiplier &amp; diviser (inverses)</p>
+          <ul class="world-tags">
+            <li>Simplifier</li>
+            <li>+ / − / ×</li>
+            <li>Division ÷</li>
+          </ul>
+          <button class="play-btn">💥 Final Smash !</button>
+        </article>
+
+        <!-- Monde 5 : One Punch Man / Boss Rush -->
         <article class="world-card theme-opm" data-world="boss">
           <div class="world-card-top">
             <span class="world-badge">ONE PUNCH MAN</span>
@@ -420,6 +447,7 @@
         <button class="tab-btn active" data-tab="g-pyth">⛏️ Pythagore</button>
         <button class="tab-btn" data-tab="g-rel">⚔️ Relatifs</button>
         <button class="tab-btn" data-tab="g-stat">⚡ Statistiques</button>
+        <button class="tab-btn" data-tab="g-frac">💥 Fractions</button>
       </div>
       <div class="modal-body">
         <!-- Tab Pythagore -->
@@ -495,6 +523,28 @@
             <h3>3. L'Étendue (l'écart total)</h3>
             <div class="formula-pill">Étendue = Valeur MAX − Valeur MIN</div>
             <p>Ex : de 12 à 45 → <code>45 - 12 = 33</code>.</p>
+          </div>
+        </div>
+
+        <!-- Tab Fractions -->
+        <div class="tab-panel" id="g-frac">
+          <div class="memo-card">
+            <h3>1. Simplifier une fraction</h3>
+            <p>On divise le haut et le bas par le <strong>même nombre</strong> : <code>12/18 = (12÷6)/(18÷6) = 2/3</code>.</p>
+          </div>
+          <div class="memo-card">
+            <h3>2. Addition (+) &amp; Soustraction (−)</h3>
+            <p>⚠️ <strong>Même dénominateur obligatoire !</strong> On ne touche jamais au dénominateur commun : <code>1/2 + 1/4 = 2/4 + 1/4 = 3/4</code>.</p>
+          </div>
+          <div class="memo-card">
+            <h3>3. Multiplication (×)</h3>
+            <div class="formula-pill">(a / b) × (c / d) = (a × c) / (b × d)</div>
+            <p>Haut × haut, bas × bas, puis on simplifie !</p>
+          </div>
+          <div class="memo-card">
+            <h3>4. Division (÷) : l'INVERSE !</h3>
+            <div class="formula-pill">(a / b) ÷ (c / d) = (a / b) × (d / c)</div>
+            <p>Diviser par une fraction, c'est <strong>multiplier par son inverse</strong>.</p>
           </div>
         </div>
       </div>
@@ -731,6 +781,7 @@
         <button class="tab-btn active" data-course="pythagore">⛏️ Pythagore</button>
         <button class="tab-btn" data-course="relatifs">⚔️ Relatifs</button>
         <button class="tab-btn" data-course="stats">⚡ Statistiques</button>
+        <button class="tab-btn" data-course="fractions">💥 Fractions</button>
       </div>
 
       <div class="dojo-progress-bar">
@@ -759,6 +810,7 @@
   </div>
 
   <script src="audio.js"></script>
+  <script src="monsters.js"></script>
   <script src="lessons.js"></script>
   <script src="questions.js"></script>
   <script src="game.js"></script>

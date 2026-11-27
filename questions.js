@@ -606,6 +606,192 @@ const MathGen = (() => {
     };
   }
 
+  // ==================== 4. FRACTIONS 4ÈME (SUPER SMASH BROS) ====================
+  const SMASH_STORIES = [
+    '💥 Final Smash chargé ! Calcule cette fraction pour éjecter Bowser hors du stage !',
+    '⚡ Mario et Kirby combinent leurs attaques : simplifie ou calcule cette fraction !',
+    '🔥 Bataille sur Destination Finale ! Un calcul exact pour garder tes pourcentages !',
+    '🏆 Balle Smash apparue ! Trouve la fraction exacte avant Ganondorf !'
+  ];
+
+  function gcd(a, b) {
+    a = Math.abs(a);
+    b = Math.abs(b);
+    while (b !== 0) {
+      const t = b;
+      b = a % b;
+      a = t;
+    }
+    return a || 1;
+  }
+
+  function simplifyFrac(num, den) {
+    if (den < 0) {
+      num = -num;
+      den = -den;
+    }
+    const g = gcd(num, den);
+    return [num / g, den / g];
+  }
+
+  function fmtFracText(num, den) {
+    const [n, d] = simplifyFrac(num, den);
+    return d === 1 ? `${n}` : `${n}/${d}`;
+  }
+
+  function fracHTML(num, den) {
+    return `<span class="frac"><span class="frac-n">${num}</span><span class="frac-d">${den}</span></span>`;
+  }
+
+  function makeFracChoices(ansNum, ansDen, extras = []) {
+    const [an, ad] = simplifyFrac(ansNum, ansDen);
+    const correctStr = fmtFracText(an, ad);
+    const set = new Set([correctStr]);
+
+    for (const [en, ed] of extras) {
+      if (set.size >= 4) break;
+      if (!ed || !Number.isFinite(en) || !Number.isFinite(ed)) continue;
+      set.add(fmtFracText(en, ed));
+    }
+
+    let tries = 0;
+    while (set.size < 4 && tries < 50) {
+      tries++;
+      const dn = randInt(-3, 3);
+      const dd = pick([0, 0, 1, 2]);
+      const cn = an + (dn === 0 ? 1 : dn);
+      const cd = Math.max(2, ad + dd);
+      if (cn === 0) continue;
+      set.add(fmtFracText(cn, cd));
+    }
+    return shuffle([...set]);
+  }
+
+  function generateFractions(diff) {
+    const story = pick(SMASH_STORIES);
+    const roll = Math.random();
+
+    // 1) Simplification de fraction (20%)
+    if (roll < 0.20) {
+      const basePairs = [[1, 2], [2, 3], [3, 4], [2, 5], [3, 5], [4, 5], [3, 7], [5, 6], [4, 7]];
+      const [bn, bd] = pick(basePairs);
+      const mult = diff === 1 ? pick([2, 3, 4, 5]) : pick([3, 4, 5, 6, 7]);
+      const n = bn * mult;
+      const d = bd * mult;
+      const ans = fmtFracText(bn, bd);
+
+      return {
+        topic: 'fractions',
+        category: '💥 Fractions • Simplification',
+        story,
+        prompt: `Simplifie cette fraction au maximum (forme irréductible) :`,
+        visualHtml: `<div class="math-display frac-display">${fracHTML(n, d)}</div>`,
+        hint: `Cherche un diviseur commun à ${n} et ${d} (ici, essaie de diviser le haut et le bas par <strong>${mult}</strong> !).`,
+        answer: ans,
+        choices: makeFracChoices(bn, bd, [[bn + 1, bd], [bn, bd + 1], [n / 2 === Math.floor(n / 2) && d / 2 === Math.floor(d / 2) ? n / 2 : bn + 2, bd]]),
+        explain: `On divise le numérateur et le dénominateur par <strong>${mult}</strong> :<br>${n} ÷ ${mult} = <strong>${bn}</strong> et ${d} ÷ ${mult} = <strong>${bd}</strong> → <strong>${ans}</strong>.`
+      };
+    }
+
+    // 2) Multiplication de fractions (28%)
+    if (roll < 0.48) {
+      const n1 = randInt(1, diff === 1 ? 5 : 7);
+      const d1 = randInt(2, diff === 1 ? 6 : 8);
+      const n2 = randInt(1, diff === 1 ? 5 : 7);
+      const d2 = randInt(2, diff === 1 ? 6 : 8);
+      const [an, ad] = simplifyFrac(n1 * n2, d1 * d2);
+      const ans = fmtFracText(an, ad);
+
+      return {
+        topic: 'fractions',
+        category: '💥 Fractions • Multiplication',
+        story,
+        prompt: `Calcule ce produit (résultat simplifié) :`,
+        visualHtml: `<div class="math-display frac-display">${fracHTML(n1, d1)} <span class="frac-op">×</span> ${fracHTML(n2, d2)}</div>`,
+        hint: `Pour multiplier deux fractions : <strong>haut × haut</strong> et <strong>bas × bas</strong>, puis simplifie si possible !`,
+        answer: ans,
+        choices: makeFracChoices(an, ad, [[n1 + n2, d1 + d2], [n1 * d2, d1 * n2], [an + 1, ad]]),
+        explain: `Haut × haut : ${n1} × ${n2} = ${n1 * n2}. Bas × bas : ${d1} × ${d2} = ${d1 * d2}.<br>Forme simplifiée : <strong>${ans}</strong>.`
+      };
+    }
+
+    // 3) Division de fractions — Programme 4ème ! (24% en diff >= 2, 15% en diff 1)
+    if (roll < (diff === 1 ? 0.63 : 0.72)) {
+      const n1 = randInt(1, 5);
+      const d1 = randInt(2, 6);
+      const n2 = randInt(1, 5);
+      const d2 = randInt(2, 6);
+      const [an, ad] = simplifyFrac(n1 * d2, d1 * n2);
+      const ans = fmtFracText(an, ad);
+
+      return {
+        topic: 'fractions',
+        category: '💥 Fractions • Division (Inverse)',
+        story,
+        prompt: `Calcule ce quotient de fractions (résultat simplifié) :`,
+        visualHtml: `<div class="math-display frac-display">${fracHTML(n1, d1)} <span class="frac-op">÷</span> ${fracHTML(n2, d2)}</div>`,
+        hint: `Diviser par ${n2}/${d2}, c’est <strong>multiplier par son inverse ${d2}/${n2}</strong> !`,
+        answer: ans,
+        choices: makeFracChoices(an, ad, [[n1 * n2, d1 * d2], [d1 * n2, n1 * d2], [an + 1, ad]]),
+        explain: `On multiplie par l’inverse : ${n1}/${d1} × <strong>${d2}/${n2}</strong> = ${n1 * d2}/${d1 * n2}.<br>Forme simplifiée : <strong>${ans}</strong>.`
+      };
+    }
+
+    // 4) Addition / Soustraction de fractions (le reste)
+    const isSub = Math.random() < 0.45;
+    let n1, d1, n2, d2;
+    if (diff === 1) {
+      // Dénominateur identique ou multiple simple
+      if (Math.random() < 0.5) {
+        d1 = pick([4, 5, 6, 7, 8, 9]);
+        d2 = d1;
+        n1 = randInt(2, d1 + 2);
+        n2 = randInt(1, isSub ? n1 - 1 : 5);
+      } else {
+        d1 = pick([2, 3, 4, 5]);
+        const k = pick([2, 3]);
+        d2 = d1 * k;
+        n1 = randInt(1, 4);
+        n2 = randInt(1, 5);
+        if (isSub && n1 * k <= n2) n1 += 2;
+      }
+    } else {
+      // Dénominateurs différents (ex: 3 et 4, 2 et 5...)
+      const pairs = [[2, 3], [3, 4], [2, 5], [3, 5], [4, 5], [3, 6], [4, 6]];
+      [d1, d2] = pick(pairs);
+      n1 = randInt(1, 5);
+      n2 = randInt(1, 5);
+      if (isSub && diff === 2 && n1 * d2 <= n2 * d1) {
+        [n1, d1, n2, d2] = [n2, d2, n1, d1];
+        if (n1 * d2 === n2 * d1) n1++;
+      }
+    }
+
+    const commonDen = (d1 * d2) / gcd(d1, d2);
+    const m1 = commonDen / d1;
+    const m2 = commonDen / d2;
+    const rawNum = isSub ? n1 * m1 - n2 * m2 : n1 * m1 + n2 * m2;
+    const [an, ad] = simplifyFrac(rawNum, commonDen);
+    const ans = fmtFracText(an, ad);
+    const opSym = isSub ? '−' : '+';
+
+    return {
+      topic: 'fractions',
+      category: isSub ? '💥 Fractions • Soustraction' : '💥 Fractions • Addition',
+      story,
+      prompt: `Mets au même dénominateur puis calcule (résultat simplifié) :`,
+      visualHtml: `<div class="math-display frac-display">${fracHTML(n1, d1)} <span class="frac-op">${opSym}</span> ${fracHTML(n2, d2)}</div>`,
+      hint: d1 === d2
+        ? `Les dénominateurs sont déjà identiques (${d1}) ! Calcule juste ${n1} ${opSym} ${n2} au numérateur.`
+        : `Mets les deux fractions sur <strong>${commonDen}</strong> avant d’additionner ou soustraire les numérateurs !`,
+      answer: ans,
+      choices: makeFracChoices(an, ad, [[isSub ? n1 - n2 : n1 + n2, d1 + d2], [an + 1, ad], [an, ad + 1]]),
+      explain: d1 === d2
+        ? `Même dénominateur (${d1}) : (${n1} ${opSym} ${n2}) / ${d1} = ${rawNum}/${commonDen} → <strong>${ans}</strong>.`
+        : `Sur ${commonDen} : ${n1 * m1}/${commonDen} ${opSym} ${n2 * m2}/${commonDen} = ${rawNum}/${commonDen} → <strong>${ans}</strong>.`
+    };
+  }
+
   // ==================== API PUBLIQUE ====================
   function generateQuest(world, diff, count = 8) {
     const list = [];
@@ -613,13 +799,15 @@ const MathGen = (() => {
       if (world === 'pythagore') list.push(generatePythagore(diff));
       else if (world === 'relatifs') list.push(generateRelatifs(diff));
       else if (world === 'stats') list.push(generateStats(diff));
+      else if (world === 'fractions') list.push(generateFractions(diff));
       else {
-        // Boss Rush One Punch Man : alterne les 3 chapitres équitablement !
-        const slot = i % 3;
+        // Boss Rush One Punch Man : alterne les 4 chapitres équitablement !
+        const slot = i % 4;
         const q =
           slot === 0 ? generatePythagore(diff)
           : slot === 1 ? generateRelatifs(diff)
-          : generateStats(diff);
+          : slot === 2 ? generateStats(diff)
+          : generateFractions(diff);
         q.story = pick([
           '👊 Niveau de menace DÉMON détecté ! Prépare ton coup !',
           '⚡ Genos analyse la cible : il te faut un calcul parfait !',
