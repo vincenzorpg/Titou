@@ -30,6 +30,7 @@
 
   <!-- Fond animé discret -->
   <div class="bg-grid" aria-hidden="true"></div>
+  <div id="speed-lines" class="speed-lines hidden" aria-hidden="true"></div>
   <div id="fx-layer" aria-hidden="true"></div>
 
   <!-- BARRE SUPÉRIEURE (HUD PERSISTANT) -->
@@ -269,10 +270,16 @@
 
       <!-- Barre de Combat / Boss / Progression thématique -->
       <div class="battle-stage" id="battle-stage">
+        <div class="battle-fx-beam" id="battle-beam" aria-hidden="true"></div>
+        <div class="floating-dmg-layer" id="floating-dmg-layer" aria-hidden="true"></div>
+
         <div class="fighter player-side">
-          <div class="fighter-icon" id="player-sprite">🦸</div>
+          <div class="fighter-icon player-sprite" id="player-sprite">🦸</div>
           <div class="fighter-info">
-            <div class="fighter-name" id="battle-player-name">Titou</div>
+            <div class="fighter-name">
+              <span id="battle-player-name">Titou</span>
+              <span class="fighter-rank-mini" id="battle-player-rank">Niv. 1</span>
+            </div>
             <div class="charge-bar-wrap" title="3 bonnes réponses d'affilée = Coup Critique / Serious Punch !">
               <div class="charge-label">⚡ Jauge Ultime</div>
               <div class="bar-track">
@@ -480,17 +487,27 @@
     </div>
   </div>
 
-  <!-- ==================== MODALE : TROPHÉES / BADGES ==================== -->
+  <!-- ==================== MODALE : TROPHÉES & TRANSFORMATIONS (NIV. 1 → 100) ==================== -->
   <div class="modal-backdrop hidden" id="modal-badges" role="dialog" aria-modal="true">
     <div class="modal-box">
       <div class="modal-header">
-        <h2>🏆 Salle des Trophées — <span id="badges-player-name">Titou</span></h2>
+        <h2>🏆 Trophées &amp; Transformations — <span id="badges-player-name">Titou</span></h2>
         <button class="modal-close" data-close="modal-badges">✕</button>
       </div>
+      <div class="modal-tabs" id="badges-tabs">
+        <button class="tab-btn active" data-btab="b-evolutions">🔥 Transformations (Niv. 100)</button>
+        <button class="tab-btn" data-btab="b-trophies">🏆 Trophées (8)</button>
+      </div>
       <div class="modal-body">
-        <div class="badges-grid" id="badges-grid"></div>
-        <div class="reset-zone">
-          <button class="btn-danger-ghost" id="btn-reset-save">Réinitialiser la progression</button>
+        <div class="tab-panel active" id="b-evolutions">
+          <div class="evo-summary" id="evo-summary"></div>
+          <div class="evo-grid" id="evo-grid"></div>
+        </div>
+        <div class="tab-panel" id="b-trophies">
+          <div class="badges-grid" id="badges-grid"></div>
+          <div class="reset-zone">
+            <button class="btn-danger-ghost" id="btn-reset-save">Réinitialiser la progression</button>
+          </div>
         </div>
       </div>
     </div>

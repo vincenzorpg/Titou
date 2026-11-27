@@ -5,15 +5,77 @@
   const STORE_KEY = 'mathquest_accounts_v2';
   const QUEST_LENGTH = 8;
 
-  // Rangs évolutifs mêlant Minecraft, Pokémon, Berserk & One Punch Man
+  // 12 Transformations épiques du Niveau 1 au Niveau 100 !
   const RANKS = [
-    { lvl: 1, name: 'Villageois', icon: '⛏️' },
-    { lvl: 2, name: 'Dresseur', icon: '⚡' },
-    { lvl: 4, name: 'Classe C', icon: '🥊' },
-    { lvl: 6, name: 'Épéiste Noir', icon: '⚔️' },
-    { lvl: 9, name: 'Héros Classe S', icon: '🔥' },
-    { lvl: 12, name: 'Légende 4ème', icon: '👑' }
+    { lvl: 1,   name: 'Villageois Cubique',        sub: 'Début de l’aventure',      icon: '⛏️', hair: '#475569', eyes: '#38bdf8', aura: 'none',   bolts: false, crown: false, style: 'base' },
+    { lvl: 5,   name: 'Dresseur d’Élite',          sub: 'Maître des stats',         icon: '⚡', hair: '#1e293b', eyes: '#facc15', aura: '#facc15', bolts: false, crown: false, style: 'base' },
+    { lvl: 10,  name: 'Héros Classe C',            sub: 'Association des Héros',    icon: '🥊', hair: '#334155', eyes: '#f97316', aura: '#f97316', bolts: false, crown: false, style: 'spiky' },
+    { lvl: 18,  name: 'Épéiste Noir',              sub: 'Porteur de Dragon Slayer', icon: '⚔️', hair: '#0f172a', eyes: '#ef4444', aura: '#ef4444', bolts: false, crown: false, style: 'spiky' },
+    { lvl: 26,  name: 'Héros Classe S',            sub: 'Puissance Serious Punch',  icon: '🔥', hair: '#fde047', eyes: '#f97316', aura: '#f97316', bolts: false, crown: false, style: 'spiky' },
+    { lvl: 35,  name: 'Super Saiyan 1',            sub: 'Éveil doré',               icon: '🟡', hair: '#facc15', eyes: '#22d3ee', aura: '#facc15', bolts: false, crown: false, style: 'ssj' },
+    { lvl: 45,  name: 'Super Saiyan 2',            sub: 'Éclairs de foudre',        icon: '⚡', hair: '#fde047', eyes: '#22d3ee', aura: '#facc15', bolts: true,  crown: false, style: 'ssj' },
+    { lvl: 55,  name: 'Super Saiyan 3',            sub: 'Crinière surpuissante',    icon: '🔥', hair: '#fbbf24', eyes: '#38bdf8', aura: '#f59e0b', bolts: true,  crown: false, style: 'ssj3' },
+    { lvl: 65,  name: 'Super Saiyan God',          sub: 'Flammes divines',          icon: '🔴', hair: '#ef4444', eyes: '#fca5a5', aura: '#ef4444', bolts: false, crown: false, style: 'ssj' },
+    { lvl: 75,  name: 'Super Saiyan Blue',         sub: 'Ki divin maîtrisé',        icon: '💎', hair: '#38bdf8', eyes: '#bae6fd', aura: '#38bdf8', bolts: true,  crown: false, style: 'ssj' },
+    { lvl: 88,  name: 'Ultra Instinct Maîtrisé',   sub: 'Esquive absolue',          icon: '⚪', hair: '#f8fafc', eyes: '#e2e8f0', aura: '#e2e8f0', bolts: true,  crown: false, style: 'ssj' },
+    { lvl: 100, name: 'Sangoku Super Saiyan 6',    sub: 'OMNI-INFINI • LÉGENDE',    icon: '🌌', hair: 'url(#ssj6Hair)', eyes: '#fde047', aura: '#e879f9', bolts: true, crown: true, style: 'ssj6' }
   ];
+
+  function renderHeroAvatarSVG(rank) {
+    const isSSJ6 = rank.style === 'ssj6';
+    const isSSJ3 = rank.style === 'ssj3';
+    const isSpiky = rank.style !== 'base';
+    const auraColor = rank.aura === 'none' ? 'transparent' : rank.aura;
+
+    const hairPath = isSSJ6
+      ? 'M18,52 L8,24 L26,30 L20,6 L40,22 L50,2 L60,22 L80,6 L74,30 L92,24 L82,52 L88,78 L72,64 L50,74 L28,64 L12,78 Z'
+      : isSSJ3
+      ? 'M18,50 L10,26 L26,32 L24,10 L42,24 L50,6 L58,24 L76,10 L74,32 L90,26 L82,50 L86,84 L70,70 L50,82 L30,70 L14,84 Z'
+      : isSpiky
+      ? 'M22,50 L12,28 L28,34 L24,12 L42,26 L50,8 L58,26 L76,12 L72,34 L88,28 L78,50 Z'
+      : 'M26,48 Q26,20 50,20 Q74,20 74,48 L72,38 Q50,28 28,38 Z';
+
+    const boltsSvg = rank.bolts
+      ? `<polyline points="12,68 22,52 16,52 26,34" fill="none" stroke="${isSSJ6 ? '#facc15' : '#38bdf8'}" stroke-width="3" stroke-linecap="round"/>
+         <polyline points="88,68 78,52 84,52 74,34" fill="none" stroke="${isSSJ6 ? '#38bdf8' : '#facc15'}" stroke-width="3" stroke-linecap="round"/>`
+      : '';
+
+    const crownSvg = rank.crown
+      ? `<polygon points="34,14 42,4 50,12 58,4 66,14 62,20 38,20" fill="#facc15" stroke="#fff" stroke-width="1.5"/>`
+      : '';
+
+    return `
+      <svg viewBox="0 0 100 100" role="img" aria-label="${rank.name}">
+        <defs>
+          <linearGradient id="ssj6Hair" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#ffffff"/>
+            <stop offset="45%" stop-color="#facc15"/>
+            <stop offset="100%" stop-color="#e879f9"/>
+          </linearGradient>
+        </defs>
+        <!-- Aura -->
+        <circle cx="50" cy="52" r="44" fill="${auraColor}" opacity="${isSSJ6 ? '0.32' : '0.22'}"/>
+        ${isSSJ6 ? '<circle cx="50" cy="52" r="38" fill="none" stroke="#facc15" stroke-width="2.5" stroke-dasharray="6 4"/>' : ''}
+        <!-- Cheveux -->
+        <path d="${hairPath}" fill="${rank.hair}" stroke="#0b0f19" stroke-width="2.5" stroke-linejoin="round"/>
+        ${crownSvg}
+        <!-- Visage -->
+        <path d="M30,44 Q30,74 50,76 Q70,74 70,44 Q50,38 30,44 Z" fill="#fde6c4" stroke="#0b0f19" stroke-width="2.5"/>
+        <!-- Sourcils déterminés -->
+        <line x1="35" y1="49" x2="46" y2="52" stroke="#0b0f19" stroke-width="2.6" stroke-linecap="round"/>
+        <line x1="65" y1="49" x2="54" y2="52" stroke="#0b0f19" stroke-width="2.6" stroke-linecap="round"/>
+        <!-- Yeux anime -->
+        <ellipse cx="41" cy="55" rx="4.2" ry="3.2" fill="#fff"/>
+        <circle cx="41.5" cy="55" r="2.3" fill="${rank.eyes}"/>
+        <ellipse cx="59" cy="55" rx="4.2" ry="3.2" fill="#fff"/>
+        <circle cx="58.5" cy="55" r="2.3" fill="${rank.eyes}"/>
+        <!-- Sourire confiant -->
+        <path d="M43,66 Q50,70 57,65" fill="none" stroke="#0b0f19" stroke-width="2.4" stroke-linecap="round"/>
+        <!-- Éclairs -->
+        ${boltsSvg}
+      </svg>
+    `;
+  }
 
   // Trophées déblocables
   const BADGES = [
@@ -402,17 +464,34 @@
     }
   }
 
+  function xpNeededForLevel(lvl) {
+    // Progression fluide de 1 à 100 : rapide au début, épique vers le Niv. 100 !
+    return 100 + (lvl - 1) * 10;
+  }
+
   function getLevelInfo(xp) {
-    // 150 XP par niveau (progression rapide et motivante !)
-    const perLevel = 150;
-    const level = Math.floor(xp / perLevel) + 1;
-    const intoLevel = xp % perLevel;
-    const pct = Math.round((intoLevel / perLevel) * 100);
-    let rank = RANKS[0];
-    for (const r of RANKS) {
-      if (level >= r.lvl) rank = r;
+    const MAX_LVL = 100;
+    let remaining = Math.max(0, Math.floor(xp || 0));
+    let level = 1;
+    while (level < MAX_LVL) {
+      const need = xpNeededForLevel(level);
+      if (remaining < need) break;
+      remaining -= need;
+      level++;
     }
-    return { level, pct, rank };
+    const needNext = xpNeededForLevel(level);
+    const pct = level >= MAX_LVL ? 100 : Math.round((remaining / needNext) * 100);
+    const xpToNext = level >= MAX_LVL ? 0 : needNext - remaining;
+
+    let rank = RANKS[0];
+    let nextRank = null;
+    for (let i = 0; i < RANKS.length; i++) {
+      if (level >= RANKS[i].lvl) {
+        rank = RANKS[i];
+        nextRank = RANKS[i + 1] || null;
+      }
+    }
+    return { level, pct, rank, nextRank, xpToNext };
   }
 
   // ==================== RÉGLAGES & ÉTAT DE PARTIE ====================
@@ -491,6 +570,75 @@
     }
   }
 
+  function triggerSpeedLines() {
+    const el = $('speed-lines');
+    if (!el) return;
+    el.classList.remove('hidden');
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.style.animation = '';
+    setTimeout(() => el.classList.add('hidden'), 680);
+  }
+
+  function playAttackAnimation({ isCrit, dmg, combo }) {
+    const stage = $('battle-stage');
+    const pSprite = $('player-sprite');
+    const eSprite = $('enemy-sprite');
+    const beam = $('battle-beam');
+    const dmgLayer = $('floating-dmg-layer');
+
+    // 1. Le héros bondit
+    pSprite.classList.remove('lunge');
+    void pSprite.offsetWidth;
+    pSprite.classList.add('lunge');
+
+    // 2. Rayon d'énergie vers l'ennemi
+    beam.className = 'battle-fx-beam';
+    void beam.offsetWidth;
+    beam.classList.add(isCrit ? 'fire-crit' : 'fire-normal');
+
+    // 3. Impact sur le boss + secousse d'arène + nombre de dégâts flottant
+    setTimeout(() => {
+      eSprite.classList.remove('hit-flash');
+      void eSprite.offsetWidth;
+      eSprite.classList.add('hit-flash');
+
+      stage.classList.remove('stage-shake');
+      void stage.offsetWidth;
+      stage.classList.add('stage-shake');
+
+      const pop = document.createElement('div');
+      pop.className = `dmg-pop ${isCrit ? 'crit' : ''}`;
+      const powerNum = dmg * 10 + combo * 15;
+      pop.textContent = isCrit ? `💥 CRIT -${powerNum} !!` : `-${powerNum} !`;
+      dmgLayer.appendChild(pop);
+      setTimeout(() => pop.remove(), 980);
+
+      if (session && session.enemyHp <= 0) {
+        eSprite.classList.add('ko');
+      }
+    }, 150);
+
+    // 4. Lignes de vitesse manga sur Coup Critique ou Combo >= 4
+    if (isCrit || combo >= 4) {
+      triggerSpeedLines();
+    }
+  }
+
+  function updatePlayerBattleAura() {
+    const pSprite = $('player-sprite');
+    if (!pSprite) return;
+    const { level, rank } = getLevelInfo(profile.xp);
+    pSprite.innerHTML = renderHeroAvatarSVG(rank);
+    pSprite.classList.remove('aura-blue', 'aura-gold', 'aura-cosmic');
+    const combo = session ? session.combo : 0;
+    if (rank.style === 'ssj6' || combo >= 5) pSprite.classList.add('aura-cosmic');
+    else if (level >= 35 || combo >= 3) pSprite.classList.add('aura-gold');
+    else if (combo >= 2) pSprite.classList.add('aura-blue');
+
+    const rankMini = $('battle-player-rank');
+    if (rankMini) rankMini.textContent = `Niv. ${level}`;
+  }
   function showSlashBanner(text) {
     const el = document.createElement('div');
     el.className = 'slash-banner';
@@ -527,9 +675,10 @@
     };
 
     $('game-world-label').textContent = meta.label;
-    $('player-sprite').textContent = meta.playerSprite;
     $('enemy-name').textContent = enemy.name;
     $('enemy-sprite').textContent = enemy.sprite;
+    $('enemy-sprite').classList.remove('ko');
+    updatePlayerBattleAura();
     updateBattleBars();
     renderProgressDots();
     showScreen('game');
@@ -719,10 +868,10 @@
       session.results.push('correct');
 
       const isCrit = session.ultCharge >= 3;
-      const baseXp = 20 + settings.diff * 10;
-      const comboBonus = Math.min(session.combo * 5, 30);
-      const gainedXp = baseXp + comboBonus + (isCrit ? 20 : 0);
-      const gainedGems = 5 + settings.diff * 2 + (isCrit ? 5 : 0);
+      const baseXp = 35 + settings.diff * 15;
+      const comboBonus = Math.min(session.combo * 10, 60);
+      const gainedXp = baseXp + comboBonus + (isCrit ? 40 : 0);
+      const gainedGems = 8 + settings.diff * 3 + (isCrit ? 10 : 0);
 
       session.xpEarned += gainedXp;
       session.gemsEarned += gainedGems;
@@ -733,25 +882,25 @@
       if (isCrit) {
         session.ultCharge = 0;
         SoundFX.crit();
-        spawnParticles('#f97316', 36);
+        spawnParticles('#f97316', 44);
+        const { rank } = getLevelInfo(profile.xp);
         const critLabel =
-          session.world === 'boss' ? '👊 SERIOUS PUNCH !!'
+          rank.style === 'ssj6' ? '🌌 KAMEHAMEHA OMNI-INFINI !!'
+          : rank.lvl >= 35 ? '⚡ SUPER KAMEHAMEHA CRITIQUE !!'
+          : session.world === 'boss' ? '👊 SERIOUS PUNCH !!'
           : session.world === 'relatifs' ? '⚔️ DRAGON SLAYER CRITIQUE !'
           : session.world === 'pythagore' ? '💎 COUP CRITIQUE DIAMANT !'
           : '⚡ ATTAQUE SUPER EFFICACE !';
         showSlashBanner(critLabel);
-        $('battle-action-text').textContent = `-${dmg}% CRIT !`;
+        $('battle-action-text').textContent = `CRIT !`;
       } else {
         SoundFX.correct(session.combo);
-        spawnParticles('#22c55e', 16);
-        $('battle-action-text').textContent = `-${dmg}% PV`;
+        spawnParticles('#22c55e', 24);
+        $('battle-action-text').textContent = session.combo >= 2 ? `COMBO x${session.combo} !` : `TOUCHÉ !`;
       }
 
-      // Animation ennemi touché
-      const eSprite = $('enemy-sprite');
-      eSprite.classList.remove('hit-flash');
-      void eSprite.offsetWidth;
-      eSprite.classList.add('hit-flash');
+      playAttackAnimation({ isCrit, dmg, combo: session.combo });
+      updatePlayerBattleAura();
 
       fbBox.classList.add('is-correct');
       fbBadge.textContent = isCrit ? '💥 COUP CRITIQUE !' : `✅ BIEN JOUÉ ${profile.name.toUpperCase()} !`;
@@ -834,10 +983,15 @@
     persistSave();
     renderHUD();
 
-    const newLevel = getLevelInfo(profile.xp).level;
-    if (newLevel > oldLevel) {
+    const newInfo = getLevelInfo(profile.xp);
+    if (newInfo.level > oldLevel) {
       SoundFX.levelUp();
-      showSlashBanner(`⬆️ NIVEAU ${newLevel} ATTEINT !`);
+      triggerSpeedLines();
+      showSlashBanner(
+        newInfo.level >= 100
+          ? '🌌 NIVEAU 100 : SUPER SAIYAN 6 !'
+          : `⬆️ NIVEAU ${newInfo.level} ATTEINT !`
+      );
     } else {
       SoundFX.victory();
     }
@@ -966,6 +1120,33 @@
   }
 
   function renderBadgesModal() {
+    // 1. Grille des 12 Transformations (Niv. 1 → 100)
+    const { level, rank, nextRank, xpToNext } = getLevelInfo(profile.xp);
+    const summary = $('evo-summary');
+    if (summary) {
+      summary.innerHTML = nextRank
+        ? `🔥 Forme actuelle : <strong>${rank.icon} ${rank.name}</strong> (Niv. ${level}/100) — Encore <strong>${xpToNext} XP</strong> pour le Niv. ${level + 1} • Prochaine transfo : <strong>${nextRank.name}</strong> (Niv. ${nextRank.lvl}) !`
+        : `🌌 FORME ULTIME ATTEINTE : <strong>${rank.name} (NIVEAU 100 / 100)</strong> — Tu es une légende absolue des Maths !`;
+    }
+
+    const evoGrid = $('evo-grid');
+    if (evoGrid) {
+      evoGrid.innerHTML = RANKS.map((r) => {
+        const unlocked = level >= r.lvl;
+        const isCurrent = rank.lvl === r.lvl;
+        const isSSJ6 = r.lvl === 100;
+        return `
+          <div class="evo-card ${unlocked ? 'unlocked' : 'locked'} ${isCurrent ? 'current' : ''} ${isSSJ6 ? 'ssj6-card' : ''}">
+            <div class="evo-lvl-tag">NIV. ${r.lvl}</div>
+            <div class="evo-avatar-wrap">${renderHeroAvatarSVG(r)}</div>
+            <div class="evo-name">${unlocked || isSSJ6 ? r.name : '???'}</div>
+            <div class="evo-sub">${unlocked ? r.sub : isSSJ6 ? 'Objectif Ultime Niv. 100 !' : `Débloqué au Niv. ${r.lvl}`}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 2. Grille des 8 Trophées
     const grid = $('badges-grid');
     grid.innerHTML = BADGES.map((b) => {
       const unlocked = profile.badges.includes(b.id);
@@ -1245,7 +1426,16 @@
     if (!btn) return;
     SoundFX.click();
     $('grimoire-tabs').querySelectorAll('.tab-btn').forEach((b) => b.classList.toggle('active', b === btn));
-    document.querySelectorAll('.tab-panel').forEach((p) => p.classList.toggle('active', p.id === btn.dataset.tab));
+    document.querySelectorAll('#modal-grimoire .tab-panel').forEach((p) => p.classList.toggle('active', p.id === btn.dataset.tab));
+  });
+
+  // Onglets de la modale Trophées & Transformations
+  $('badges-tabs').addEventListener('click', (e) => {
+    const btn = e.target.closest('.tab-btn');
+    if (!btn) return;
+    SoundFX.click();
+    $('badges-tabs').querySelectorAll('.tab-btn').forEach((b) => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('#modal-badges .tab-panel').forEach((p) => p.classList.toggle('active', p.id === btn.dataset.btab));
   });
 
   // Fermeture des modales
