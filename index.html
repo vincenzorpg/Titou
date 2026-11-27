@@ -58,6 +58,9 @@
       <button class="icon-btn" id="btn-sync" title="Synchroniser la progression entre Mobile et PC">
         ☁️ <span>Sync</span>
       </button>
+      <button class="icon-btn" id="btn-calc-top" title="Ouvrir la calculatrice (x², √, ±)">
+        🧮 <span>Calc</span>
+      </button>
       <button class="icon-btn" id="btn-grimoire" title="Grimoire de révision (Formules & Astuces)">
         📖 <span>Grimoire</span>
       </button>
@@ -283,7 +286,10 @@
       <div class="question-card" id="question-card">
         <div class="q-top-row">
           <span class="q-category-tag" id="q-category">Catégorie</span>
-          <button class="hint-btn" id="btn-hint">💡 Indice</button>
+          <div class="q-top-actions">
+            <button class="calc-mini-btn" id="btn-calc-game" type="button" title="Ouvrir la calculatrice">🧮 Calc</button>
+            <button class="hint-btn" id="btn-hint" type="button">💡 Indice</button>
+          </div>
         </div>
 
         <div class="q-story" id="q-story"></div>
@@ -553,6 +559,51 @@
       </div>
     </div>
   </div>
+
+  <!-- ==================== CALCULATRICE COLLÈGE FLOTTANTE ==================== -->
+  <aside class="calc-drawer hidden" id="calc-drawer" role="dialog" aria-label="Calculatrice Collège 4ème">
+    <div class="calc-header">
+      <div class="calc-title">🧮 Calculatrice 4ème</div>
+      <div class="calc-head-btns">
+        <button type="button" class="calc-use-btn hidden" id="calc-use-btn" title="Mettre ce résultat dans la réponse">↳ Utiliser</button>
+        <button type="button" class="modal-close" id="calc-close-btn" aria-label="Fermer la calculatrice">✕</button>
+      </div>
+    </div>
+    <div class="calc-screen">
+      <div class="calc-expr" id="calc-expr">&nbsp;</div>
+      <div class="calc-display" id="calc-display">0</div>
+    </div>
+    <div class="calc-grid" id="calc-grid">
+      <button type="button" class="c-btn c-fn" data-act="clear">C</button>
+      <button type="button" class="c-btn c-fn" data-act="back">⌫</button>
+      <button type="button" class="c-btn c-sci" data-act="sq">x²</button>
+      <button type="button" class="c-btn c-sci" data-act="sqrt">√</button>
+
+      <button type="button" class="c-btn c-fn" data-val="(">(</button>
+      <button type="button" class="c-btn c-fn" data-val=")">)</button>
+      <button type="button" class="c-btn c-fn" data-act="neg">±</button>
+      <button type="button" class="c-btn c-op" data-val="÷">÷</button>
+
+      <button type="button" class="c-btn" data-val="7">7</button>
+      <button type="button" class="c-btn" data-val="8">8</button>
+      <button type="button" class="c-btn" data-val="9">9</button>
+      <button type="button" class="c-btn c-op" data-val="×">×</button>
+
+      <button type="button" class="c-btn" data-val="4">4</button>
+      <button type="button" class="c-btn" data-val="5">5</button>
+      <button type="button" class="c-btn" data-val="6">6</button>
+      <button type="button" class="c-btn c-op" data-val="-">−</button>
+
+      <button type="button" class="c-btn" data-val="1">1</button>
+      <button type="button" class="c-btn" data-val="2">2</button>
+      <button type="button" class="c-btn" data-val="3">3</button>
+      <button type="button" class="c-btn c-op" data-val="+">+</button>
+
+      <button type="button" class="c-btn c-zero" data-val="0">0</button>
+      <button type="button" class="c-btn" data-val=",">,</button>
+      <button type="button" class="c-btn c-eq" data-act="eq">=</button>
+    </div>
+  </aside>
 
   <script src="audio.js"></script>
   <script src="questions.js"></script>

@@ -1256,13 +1256,214 @@
     }
   });
 
+  // ==================== CALCULATRICE COLLÈGE 4ÈME ====================
+  const Calc = (() => {
+    let expr = '';
+    let lastResult = null;
+    let justEvaluated = false;
+
+    const drawer = () => $('calc-drawer');
+    const isOpen = () => drawer() && !drawer().classList.contains('hidden');
+
+    function fmtCalc(n) {
+      if (!Number.isFinite(n)) return 'Erreur';
+      const rounded = Math.round(n * 100000) / 100000;
+      return String(rounded).replace('.', ',');
+    }
+
+    function safeEval(str) {
+      const normalized = str
+        .replace(/×/g, '*')
+        .replace(/÷/g, '/')
+        .replace(/−/g, '-')
+        .replace(/,/g, '.')
+        .trim();
+      if (!normalized || !/^[0-9+\-*/().\s]+$/.test(normalized)) {
+        throw new Error('Invalid');
+      }
+      // eslint-disable-next-line no-new-func
+      const val = Function(`"use strict"; return (${normalized});`)();
+      if (typeof val !== 'number' || !Number.isFinite(val)) throw new Error('NaN');
+      return val;
+    }
+
+    function updateUI(historyText = null) {
+      if (historyText !== null) $('calc-expr').textContent = historyText || '\u00A0';
+      $('calc-display').textContent = expr || '0';
+      const useBtn = $('calc-use-btn');
+      const canInsert =
+        screens.game.classList.contains('active') &&
+        !$('answer-type-form').classList.contains('hidden') &&
+        !$('answer-input').disabled &&
+        lastResult !== null;
+      useBtn.classList.toggle('hidden', !canInsert);
+    }
+
+    function open() {
+      SoundFX.click();
+      drawer().classList.remove('hidden');
+      updateUI();
+    }
+
+    function close() {
+      drawer().classList.add('hidden');
+    }
+
+    function toggle() {
+      if (isOpen()) close();
+      else open();
+    }
+
+    function pressVal(v) {
+      SoundFX.click();
+      const isOp = ['+', '-', '×', '÷'].includes(v);
+      if (justEvaluated) {
+        if (isOp && lastResult !== null) {
+          expr = fmtCalc(lastResult) + v;
+        } else {
+          expr = v === ',' ? '0,' : v;
+        }
+        justEvaluated = false;
+      } else {
+        if (expr === 'Erreur') expr = '';
+        if (v === ',' && (!expr || /[+\-×÷(]$/.test(expr))) {
+          expr += '0,';
+        } else {
+          expr += v;
+        }
+      }
+      updateUI();
+    }
+
+    function pressAct(act) {
+      SoundFX.click();
+      if (act === 'clear') {
+        expr = '';
+        lastResult = null;
+        justEvaluated = false;
+        updateUI('');
+        return;
+      }
+      if (act === 'back') {
+        if (justEvaluated) {
+          expr = '';
+          justEvaluated = false;
+        } else {
+          expr = expr.slice(0, -1);
+        }
+        updateUI();
+        return;
+      }
+      if (act === 'neg') {
+        if (!expr) {
+          expr = '-';
+        } else if (expr.startsWith('-')) {
+          expr = expr.slice(1);
+        } else {
+          expr = `-(${expr})`;
+        }
+        justEvaluated = false;
+        updateUI();
+        return;
+      }
+      if (act === 'sq' || act === 'sqrt') {
+        try {
+          const cur = expr ? safeEval(expr) : 0;
+          if (act === 'sqrt' && cur < 0) {
+            expr = 'Erreur';
+            lastResult = null;
+            updateUI(`√(${fmtCalc(cur)}) =`);
+            return;
+          }
+          const res = act === 'sq' ? cur * cur : Math.sqrt(cur);
+          const hist = act === 'sq' ? `(${fmtCalc(cur)})² =` : `√(${fmtCalc(cur)}) =`;
+          lastResult = res;
+          expr = fmtCalc(res);
+          justEvaluated = true;
+          updateUI(hist);
+        } catch {
+          expr = 'Erreur';
+          lastResult = null;
+          updateUI();
+        }
+        return;
+      }
+      if (act === 'eq') {
+        if (!expr) return;
+        try {
+          const hist = `${expr} =`;
+          const res = safeEval(expr);
+          lastResult = res;
+          expr = fmtCalc(res);
+          justEvaluated = true;
+          updateUI(hist);
+        } catch {
+          expr = 'Erreur';
+          lastResult = null;
+          justEvaluated = true;
+          updateUI();
+        }
+      }
+    }
+
+    function insertIntoAnswer() {
+      if (lastResult === null) return;
+      const input = $('answer-input');
+      if (!input || input.disabled) return;
+      const rounded = Math.round(lastResult * 10) / 10;
+      input.value = String(rounded).replace('.', ',');
+      SoundFX.correct(1);
+      close();
+      input.focus();
+    }
+
+    return { isOpen, open, close, toggle, pressVal, pressAct, insertIntoAnswer, updateUI };
+  })();
+
+  $('btn-calc-top').addEventListener('click', () => Calc.toggle());
+  $('btn-calc-game').addEventListener('click', () => Calc.toggle());
+  $('calc-close-btn').addEventListener('click', () => Calc.close());
+  $('calc-use-btn').addEventListener('click', () => Calc.insertIntoAnswer());
+
+  $('calc-grid').addEventListener('click', (e) => {
+    const btn = e.target.closest('.c-btn');
+    if (!btn) return;
+    if (btn.dataset.act) Calc.pressAct(btn.dataset.act);
+    else if (btn.dataset.val) Calc.pressVal(btn.dataset.val);
+  });
+
   // Raccourcis clavier fluides (1-4 pour QCM, Entrée pour suivant)
   document.addEventListener('keydown', (e) => {
+    if (Calc.isOpen()) {
+      if (e.key === 'Escape') {
+        Calc.close();
+        return;
+      }
+      if (document.activeElement !== $('answer-input')) {
+        if (/^[0-9()]$/.test(e.key)) { e.preventDefault(); Calc.pressVal(e.key); return; }
+        if (e.key === '.' || e.key === ',') { e.preventDefault(); Calc.pressVal(','); return; }
+        if (e.key === '+') { e.preventDefault(); Calc.pressVal('+'); return; }
+        if (e.key === '-') { e.preventDefault(); Calc.pressVal('-'); return; }
+        if (e.key === '*') { e.preventDefault(); Calc.pressVal('×'); return; }
+        if (e.key === '/') { e.preventDefault(); Calc.pressVal('÷'); return; }
+        if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); Calc.pressAct('eq'); return; }
+        if (e.key === 'Backspace') { e.preventDefault(); Calc.pressAct('back'); return; }
+      }
+      return;
+    }
+
     if (!screens.game.classList.contains('active') || !session) return;
-    if (!$('modal-grimoire').classList.contains('hidden') || !$('modal-badges').classList.contains('hidden')) {
+    if (
+      !$('modal-grimoire').classList.contains('hidden') ||
+      !$('modal-badges').classList.contains('hidden') ||
+      !$('modal-sync').classList.contains('hidden') ||
+      !$('modal-profiles').classList.contains('hidden')
+    ) {
       if (e.key === 'Escape') {
         closeModal('modal-grimoire');
         closeModal('modal-badges');
+        closeModal('modal-sync');
+        closeModal('modal-profiles');
       }
       return;
     }
