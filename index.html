@@ -97,8 +97,11 @@
           <div class="hero-tag">🎮 SESSION COURTE • 8 DÉFIS PAR QUÊTE</div>
           <h1>Prêt à tout casser, <span class="gradient-text" id="hero-player-name">Titou</span> ?</h1>
           <p class="hero-desc">
-            Choisis ton univers, règle ton mode de jeu et enchaîne les combos pour débloquer le rang <strong>Héros de Classe S</strong> !
+            Choisis ton univers, règle ton mode de jeu et enchaîne les combos pour débloquer <strong>Sangoku Super Saiyan 6 (Niv. 100)</strong> !
           </p>
+          <div class="hero-dojo-row">
+            <button type="button" class="dojo-launch-btn" id="btn-open-dojo-menu">🎓 Parcours de Cours (Dojo des Senseis)</button>
+          </div>
         </div>
 
         <!-- Réglages rapides TDAH-friendly -->
@@ -308,6 +311,7 @@
         <div class="q-top-row">
           <span class="q-category-tag" id="q-category">Catégorie</span>
           <div class="q-top-actions">
+            <button class="help-course-btn" id="btn-need-course" type="button" title="Je ne comprends pas → Voir le cours étape par étape">🎓 Cours</button>
             <button class="calc-mini-btn" id="btn-calc-game" type="button" title="Ouvrir la calculatrice">🧮 Calc</button>
             <button class="hint-btn" id="btn-hint" type="button">💡 Indice</button>
           </div>
@@ -349,7 +353,10 @@
             <span class="feedback-xp" id="feedback-xp">+25 XP</span>
           </div>
           <div class="feedback-explain" id="feedback-explain"></div>
-          <button class="btn-primary next-btn" id="btn-next">Défi suivant →</button>
+          <div class="feedback-actions">
+            <button type="button" class="btn-secondary hidden" id="btn-feedback-course">🎓 Revoir le cours</button>
+            <button class="btn-primary next-btn" id="btn-next">Défi suivant →</button>
+          </div>
         </div>
       </div>
     </section>
@@ -636,7 +643,50 @@
     </div>
   </aside>
 
+  <!-- ==================== MODALE : PARCOURS PÉDAGOGIQUE (DOJO DES SENSEIS) ==================== -->
+  <div class="modal-backdrop hidden" id="modal-dojo" role="dialog" aria-modal="true" aria-label="Parcours de cours interactif">
+    <div class="modal-box dojo-modal-box">
+      <div class="modal-header">
+        <div>
+          <h2 id="dojo-title">🎓 Dojo des Senseis — Cours interactif</h2>
+          <div class="dojo-subtitle" id="dojo-subtitle">Choisis un chapitre ou suis les étapes tranquillement</div>
+        </div>
+        <button class="modal-close" id="dojo-close-btn" data-close="modal-dojo">✕</button>
+      </div>
+
+      <div class="modal-tabs" id="dojo-topic-tabs">
+        <button class="tab-btn active" data-course="pythagore">⛏️ Pythagore</button>
+        <button class="tab-btn" data-course="relatifs">⚔️ Relatifs</button>
+        <button class="tab-btn" data-course="stats">⚡ Statistiques</button>
+      </div>
+
+      <div class="dojo-progress-bar">
+        <div class="dojo-progress-fill" id="dojo-progress-fill" style="width: 25%"></div>
+      </div>
+
+      <div class="modal-body" id="dojo-body">
+        <div class="dojo-step-badge" id="dojo-step-badge">ÉTAPE 1 / 4</div>
+        <h3 class="dojo-step-title" id="dojo-step-title"></h3>
+        <div class="dojo-step-content" id="dojo-step-content"></div>
+
+        <!-- Mini-vérification interactive en étape 4 -->
+        <div class="dojo-check-box hidden" id="dojo-check-box">
+          <div class="dojo-check-q" id="dojo-check-q"></div>
+          <div class="dojo-check-opts" id="dojo-check-opts"></div>
+          <div class="dojo-check-fb hidden" id="dojo-check-fb"></div>
+        </div>
+      </div>
+
+      <div class="dojo-footer">
+        <button type="button" class="btn-secondary" id="dojo-prev-btn">← Précédent</button>
+        <span class="dojo-step-dots" id="dojo-step-dots"></span>
+        <button type="button" class="btn-primary" id="dojo-next-btn">Étape suivante →</button>
+      </div>
+    </div>
+  </div>
+
   <script src="audio.js"></script>
+  <script src="lessons.js"></script>
   <script src="questions.js"></script>
   <script src="game.js"></script>
 </body>

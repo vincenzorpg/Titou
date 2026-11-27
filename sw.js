@@ -1,9 +1,10 @@
-const CACHE_NAME = 'mathquest-titou-v8';
+const CACHE_NAME = 'mathquest-titou-v9';
 const ASSETS = [
   './',
   './index.html',
   './style.css',
   './audio.js',
+  './lessons.js',
   './questions.js',
   './game.js',
   './manifest.json',

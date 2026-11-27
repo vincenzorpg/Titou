@@ -926,6 +926,11 @@
           : `❌ Pas tout à fait ! Réponse : ${q.answer}`;
       fbXp.textContent = 'Continue, tu vas l’avoir !';
       fbExplain.innerHTML = q.explain;
+      $('btn-feedback-course').classList.remove('hidden');
+    }
+
+    if (ok) {
+      $('btn-feedback-course').classList.add('hidden');
     }
 
     updateBattleBars();
@@ -1458,6 +1463,155 @@
     }
   });
 
+  // ==================== DOJO PÉDAGOGIQUE INTERACTIF (COURS PAS-À-PAS) ====================
+  const Dojo = (() => {
+    let courseId = 'pythagore';
+    let stepIndex = 0;
+    let openedFromGame = false;
+    let checkAnswered = false;
+
+    function render() {
+      const course = MathLessons.COURSES[courseId] || MathLessons.COURSES.pythagore;
+      const steps = course.steps;
+      const step = steps[stepIndex];
+      checkAnswered = false;
+
+      $('dojo-title').textContent = course.title;
+      $('dojo-subtitle').textContent = course.subtitle;
+
+      // Onglets chapitres
+      $('dojo-topic-tabs').querySelectorAll('.tab-btn').forEach((b) => {
+        b.classList.toggle('active', b.dataset.course === courseId);
+      });
+
+      const pct = Math.round(((stepIndex + 1) / steps.length) * 100);
+      $('dojo-progress-fill').style.width = `${pct}%`;
+      $('dojo-step-badge').textContent = step.badge;
+      $('dojo-step-title').textContent = step.title;
+      $('dojo-step-content').innerHTML = step.body;
+      $('dojo-step-dots').textContent = `Étape ${stepIndex + 1} / ${steps.length}`;
+
+      // Boutons Précédent / Suivant
+      $('dojo-prev-btn').disabled = stepIndex === 0;
+      $('dojo-prev-btn').style.opacity = stepIndex === 0 ? '0.45' : '1';
+      $('dojo-next-btn').textContent =
+        stepIndex === steps.length - 1
+          ? openedFromGame
+            ? '⚔️ Retourner au combat !'
+            : '✅ J’ai compris !'
+          : 'Étape suivante →';
+
+      // Mini-vérification interactive en dernière étape
+      const checkBox = $('dojo-check-box');
+      if (step.check) {
+        checkBox.classList.remove('hidden');
+        $('dojo-check-q').textContent = step.check.question;
+        const optsWrap = $('dojo-check-opts');
+        const fb = $('dojo-check-fb');
+        fb.classList.add('hidden');
+        fb.textContent = '';
+        optsWrap.innerHTML = '';
+
+        step.check.options.forEach((optText, idx) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'dojo-opt-btn';
+          btn.textContent = optText;
+          btn.addEventListener('click', () => {
+            if (checkAnswered) return;
+            checkAnswered = true;
+            const isOk = idx === step.check.correctIndex;
+            optsWrap.querySelectorAll('.dojo-opt-btn').forEach((b, i) => {
+              b.disabled = true;
+              if (i === step.check.correctIndex) b.classList.add('ok');
+            });
+            if (!isOk) btn.classList.add('ko');
+
+            fb.classList.remove('hidden');
+            if (isOk) {
+              SoundFX.correct(3);
+              spawnParticles('#22c55e', 20);
+              fb.style.color = '#86efac';
+              fb.textContent = `✅ ${step.check.okMsg} (+30 XP bonus !)`;
+              profile.xp += 30;
+              persistSave();
+              renderHUD();
+            } else {
+              SoundFX.wrong();
+              fb.style.color = '#fde047';
+              fb.textContent = `💡 ${step.check.retryMsg}`;
+            }
+          });
+          optsWrap.appendChild(btn);
+        });
+      } else {
+        checkBox.classList.add('hidden');
+      }
+
+      $('dojo-body').scrollTop = 0;
+    }
+
+    function open(topic = 'pythagore', fromGame = false) {
+      SoundFX.click();
+      courseId = MathLessons.COURSES[topic] ? topic : 'pythagore';
+      stepIndex = 0;
+      openedFromGame = fromGame;
+      if (fromGame) stopTimer(); // Pause le chrono pendant que Titou lit le cours !
+      render();
+      $('modal-dojo').classList.remove('hidden');
+    }
+
+    function close() {
+      $('modal-dojo').classList.add('hidden');
+    }
+
+    function setCourse(id) {
+      if (!MathLessons.COURSES[id]) return;
+      SoundFX.click();
+      courseId = id;
+      stepIndex = 0;
+      render();
+    }
+
+    function prev() {
+      if (stepIndex > 0) {
+        SoundFX.click();
+        stepIndex--;
+        render();
+      }
+    }
+
+    function next() {
+      const steps = (MathLessons.COURSES[courseId] || MathLessons.COURSES.pythagore).steps;
+      if (stepIndex < steps.length - 1) {
+        SoundFX.click();
+        stepIndex++;
+        render();
+      } else {
+        SoundFX.correct(1);
+        close();
+      }
+    }
+
+    return { open, close, setCourse, prev, next };
+  })();
+
+  $('btn-open-dojo-menu').addEventListener('click', () => Dojo.open('pythagore', false));
+  $('btn-need-course').addEventListener('click', () => {
+    const topic = session && session.questions[session.index] ? session.questions[session.index].topic : 'pythagore';
+    Dojo.open(topic, true);
+  });
+  $('btn-feedback-course').addEventListener('click', () => {
+    const topic = session && session.questions[session.index] ? session.questions[session.index].topic : 'pythagore';
+    Dojo.open(topic, true);
+  });
+  $('dojo-topic-tabs').addEventListener('click', (e) => {
+    const btn = e.target.closest('.tab-btn');
+    if (btn) Dojo.setCourse(btn.dataset.course);
+  });
+  $('dojo-prev-btn').addEventListener('click', () => Dojo.prev());
+  $('dojo-next-btn').addEventListener('click', () => Dojo.next());
+
   // ==================== CALCULATRICE COLLÈGE 4ÈME ====================
   const Calc = (() => {
     let expr = '';
@@ -1727,13 +1881,15 @@
       !$('modal-grimoire').classList.contains('hidden') ||
       !$('modal-badges').classList.contains('hidden') ||
       !$('modal-sync').classList.contains('hidden') ||
-      !$('modal-profiles').classList.contains('hidden')
+      !$('modal-profiles').classList.contains('hidden') ||
+      !$('modal-dojo').classList.contains('hidden')
     ) {
       if (e.key === 'Escape') {
         closeModal('modal-grimoire');
         closeModal('modal-badges');
         closeModal('modal-sync');
         closeModal('modal-profiles');
+        closeModal('modal-dojo');
       }
       return;
     }
